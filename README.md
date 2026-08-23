@@ -33,3 +33,8 @@ Funcionalidades:
 
 *Clase: dia,hora, cupos
 
+-EJECUCION-
+Mediante consola, lanzando el comando:
+'go run main.go'
+Levantara el servidor en el puerto 8080 sirviendo el archivo 'index.html'
+
