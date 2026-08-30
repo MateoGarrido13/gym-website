@@ -1,0 +1,36 @@
+# Binarios compilados de Go
+*.exe
+*.exe_
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+main
+
+# Archivos temporales de pruebas y cobertura
+*.out
+*.test
+*.prof
+
+# Configuraciones de IDEs y Editores de texto
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# Archivos del Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# Credenciales y Variables de Entorno Locales (Seguridad)
+.env
+.env.local
+.env.development.local
+
+# Datos de persistencia local (para evitar subir datos a GitHub)
+postgres_data/

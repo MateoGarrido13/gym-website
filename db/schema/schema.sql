@@ -59,7 +59,7 @@ CREATE TABLE clases (
 CREATE TABLE inscripciones_clases (
     clase_id INT REFERENCES clases(id) ON DELETE CASCADE,
     alumno_id INT REFERENCES alumnos(usuario_id) ON DELETE CASCADE,
-    PRIMARY KEY (clase_id, alumno_id)
+    PRIMARY KEY (clase_id, alumno_id),
     dia VARCHAR(20) PRIMARY KEY , -- Seria conveniente tagearlas como LUN,MAR,MIE,JUE,VIE
     hora TIME NOT NULL
 );
