@@ -1,6 +1,6 @@
 -- CONSULTAS DE ALUMNO
 
--- name: CreateAlumno :exec
+-- name: InsertAlumno :exec
 INSERT INTO alumno (usuario_id, fecha_inscripcion, fecha_vto, tipo_plan, rutina_id)
 VALUES ($1, $2, $3, $4, $5);
 

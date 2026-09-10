@@ -11,32 +11,6 @@ import (
 	"time"
 )
 
-const createAlumno = `-- name: CreateAlumno :exec
-
-INSERT INTO alumno (usuario_id, fecha_inscripcion, fecha_vto, tipo_plan, rutina_id)
-VALUES ($1, $2, $3, $4, $5)
-`
-
-type CreateAlumnoParams struct {
-	UsuarioID        int32          `json:"usuario_id"`
-	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
-	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
-	RutinaID         sql.NullInt32  `json:"rutina_id"`
-}
-
-// CONSULTAS DE ALUMNO
-func (q *Queries) CreateAlumno(ctx context.Context, arg CreateAlumnoParams) error {
-	_, err := q.db.ExecContext(ctx, createAlumno,
-		arg.UsuarioID,
-		arg.FechaInscripcion,
-		arg.FechaVto,
-		arg.TipoPlan,
-		arg.RutinaID,
-	)
-	return err
-}
-
 const getAlumnoCompleto = `-- name: GetAlumnoCompleto :one
 SELECT
     u.id, u.email, u.nombre, u.apellido, u.telefono, u.rol, u.created_at,
@@ -77,6 +51,32 @@ func (q *Queries) GetAlumnoCompleto(ctx context.Context, id int32) (GetAlumnoCom
 		&i.RutinaID,
 	)
 	return i, err
+}
+
+const insertAlumno = `-- name: InsertAlumno :exec
+
+INSERT INTO alumno (usuario_id, fecha_inscripcion, fecha_vto, tipo_plan, rutina_id)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertAlumnoParams struct {
+	UsuarioID        int32          `json:"usuario_id"`
+	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime   `json:"fecha_vto"`
+	TipoPlan         sql.NullString `json:"tipo_plan"`
+	RutinaID         sql.NullInt32  `json:"rutina_id"`
+}
+
+// CONSULTAS DE ALUMNO
+func (q *Queries) InsertAlumno(ctx context.Context, arg InsertAlumnoParams) error {
+	_, err := q.db.ExecContext(ctx, insertAlumno,
+		arg.UsuarioID,
+		arg.FechaInscripcion,
+		arg.FechaVto,
+		arg.TipoPlan,
+		arg.RutinaID,
+	)
+	return err
 }
 
 const listAlumnosCompletos = `-- name: ListAlumnosCompletos :many
