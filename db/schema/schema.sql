@@ -1,66 +1,99 @@
--- USUARIOS (Datos de acceso y personales comunes)
-CREATE TABLE usuarios (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    contrasena VARCHAR(255) NOT NULL, -- Guardará el hash de la clave por seguridad
-    nombre VARCHAR(100) NOT NULL,
-    apellido VARCHAR(100) NOT NULL,
-    telefono VARCHAR(50),
-    rol VARCHAR(20) NOT NULL CHECK (rol IN ('profesor', 'alumno')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TYPE enum_rol AS ENUM ('alumno', 'profesor');
+CREATE TYPE enum_dia_semana AS ENUM (
+    'lunes',
+    'martes',
+    'miercoles',
+    'jueves',
+    'viernes',
+    'sabado',
+    'domingo'
 );
 
--- EJERCICIOS (Catálogo general de ejercicios)
-CREATE TABLE ejercicios (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL,
-    descripcion TEXT
+CREATE TABLE usuario (
+    id          SERIAL PRIMARY KEY,
+    email       VARCHAR(255) NOT NULL UNIQUE,
+    contrasena  VARCHAR(255) NOT NULL,
+    nombre      VARCHAR(100) NOT NULL,
+    apellido    VARCHAR(100) NOT NULL,
+    telefono    VARCHAR(30),
+    rol         enum_rol NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RUTINAS (Planes de entrenamiento)
-CREATE TABLE rutinas (
-    id SERIAL PRIMARY KEY,
-    duracion_semanas INT NOT NULL DEFAULT 4
+CREATE TABLE profesor (
+    usuario_id    INT PRIMARY KEY,
+    especialidad  VARCHAR(100),
+    CONSTRAINT fk_profesor_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
 );
 
--- TABLA INTERMEDIA: RUTINA_EJERCICIOS (Relación muchos a muchos)
-CREATE TABLE rutina_ejercicios (
-    rutina_id INT REFERENCES rutinas(id) ON DELETE CASCADE,
-    ejercicio_id INT REFERENCES ejercicios(id) ON DELETE CASCADE,
-    PRIMARY KEY (rutina_id, ejercicio_id)
+CREATE TABLE ejercicio (
+    id              SERIAL PRIMARY KEY,
+    nombre          VARCHAR(100) NOT NULL,
+    descripcion     TEXT,
+    grupo_muscular  VARCHAR(100)
 );
 
--- ALUMNOS (Extiende la tabla usuarios)
-CREATE TABLE alumnos (
-    usuario_id INT PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
-    fecha_inscripcion DATE NOT NULL DEFAULT CURRENT_DATE,
-    fecha_vto DATE,
-    tipo_plan VARCHAR(100),
-    rutina_id INT REFERENCES rutinas(id) ON DELETE SET NULL
+CREATE TABLE rutina (
+    id                SERIAL PRIMARY KEY,
+    nombre            VARCHAR(100) NOT NULL,
+    duracion_semanas  INT NOT NULL,
+    profesor_id       INT NOT NULL,
+    CONSTRAINT fk_rutina_profesor
+        FOREIGN KEY (profesor_id) REFERENCES profesor(usuario_id)
 );
 
--- PROFESORES (Extiende la tabla usuarios)
-CREATE TABLE profesores (
-    usuario_id INT PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
-    horario VARCHAR(255), -- Horarios de disponibilidad (ej. "Turno Mañana")
-    especialidad VARCHAR(255)
+CREATE TABLE rutina_ejercicio (
+    rutina_id          INT NOT NULL,
+    ejercicio_id       INT NOT NULL,
+    orden              INT NOT NULL,
+    series             INT,
+    repeticiones       INT,
+    descanso_segundos  INT,
+    PRIMARY KEY (rutina_id, ejercicio_id),
+    CONSTRAINT fk_rutina_ejercicio_rutina
+        FOREIGN KEY (rutina_id) REFERENCES rutina(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rutina_ejercicio_ejercicio
+        FOREIGN KEY (ejercicio_id) REFERENCES ejercicio(id)
 );
 
--- CLASES (Agenda de actividades grupales)
-CREATE TABLE clases (
-    id SERIAL PRIMARY KEY,
-    dias VARCHAR(20) NOT NULL, -- Ej: "Lunes,Miércoles,Viernes"
-    hora TIME NOT NULL,       -- Hora de inicio
+CREATE TABLE alumno (
+    usuario_id         INT PRIMARY KEY,
+    fecha_inscripcion  DATE NOT NULL,
+    fecha_vto         DATE,
+    tipo_plan         VARCHAR(50),
+    rutina_id         INT,
+    CONSTRAINT fk_alumno_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT fk_alumno_rutina
+        FOREIGN KEY (rutina_id) REFERENCES rutina(id)
+);
+
+CREATE TABLE clase (
+    id          SERIAL PRIMARY KEY,
+    nombre      VARCHAR(100) NOT NULL,
     max_alumnos INT NOT NULL,
-    profesor_id INT REFERENCES profesores(usuario_id) ON DELETE SET NULL
+    profesor_id INT NOT NULL,
+    CONSTRAINT fk_clase_profesor
+        FOREIGN KEY (profesor_id) REFERENCES profesor(usuario_id)
 );
 
--- TABLA INTERMEDIA: INSCRIPCIONES_CLASES (Alumnos anotados en clases)
-CREATE TABLE inscripciones_clases (
-    clase_id INT REFERENCES clases(id) ON DELETE CASCADE,
-    alumno_id INT REFERENCES alumnos(usuario_id) ON DELETE CASCADE,
-    PRIMARY KEY (clase_id, alumno_id),
-    dia VARCHAR(20) PRIMARY KEY , -- Seria conveniente tagearlas como LUN,MAR,MIE,JUE,VIE
-    hora TIME NOT NULL
+CREATE TABLE clase_horario (
+    id          SERIAL PRIMARY KEY,
+    clase_id    INT NOT NULL,
+    dia_semana  enum_dia_semana NOT NULL,
+    hora_inicio TIME NOT NULL,
+    CONSTRAINT fk_clase_horario_clase
+        FOREIGN KEY (clase_id) REFERENCES clase(id) ON DELETE CASCADE
 );
--- Posible inconsistencia entre que el dia registrado para esta clase no sea el permitido por la tabla CLASE
+
+CREATE TABLE inscripcion_clase (
+    clase_horario_id  INT NOT NULL,
+    alumno_id         INT NOT NULL,
+    fecha_inscripcion  TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (clase_horario_id, alumno_id),
+    CONSTRAINT fk_inscripcion_horario
+        FOREIGN KEY (clase_horario_id) REFERENCES clase_horario(id) ON DELETE CASCADE,
+    CONSTRAINT fk_inscripcion_alumno
+        FOREIGN KEY (alumno_id) REFERENCES alumno(usuario_id) ON DELETE CASCADE
+);

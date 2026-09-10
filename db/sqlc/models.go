@@ -6,8 +6,99 @@ package db
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
+
+type EnumDiaSemana string
+
+const (
+	EnumDiaSemanaLunes     EnumDiaSemana = "lunes"
+	EnumDiaSemanaMartes    EnumDiaSemana = "martes"
+	EnumDiaSemanaMiercoles EnumDiaSemana = "miercoles"
+	EnumDiaSemanaJueves    EnumDiaSemana = "jueves"
+	EnumDiaSemanaViernes   EnumDiaSemana = "viernes"
+	EnumDiaSemanaSabado    EnumDiaSemana = "sabado"
+	EnumDiaSemanaDomingo   EnumDiaSemana = "domingo"
+)
+
+func (e *EnumDiaSemana) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EnumDiaSemana(s)
+	case string:
+		*e = EnumDiaSemana(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EnumDiaSemana: %T", src)
+	}
+	return nil
+}
+
+type NullEnumDiaSemana struct {
+	EnumDiaSemana EnumDiaSemana `json:"enum_dia_semana"`
+	Valid         bool          `json:"valid"` // Valid is true if EnumDiaSemana is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEnumDiaSemana) Scan(value interface{}) error {
+	if value == nil {
+		ns.EnumDiaSemana, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EnumDiaSemana.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEnumDiaSemana) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EnumDiaSemana), nil
+}
+
+type EnumRol string
+
+const (
+	EnumRolAlumno   EnumRol = "alumno"
+	EnumRolProfesor EnumRol = "profesor"
+)
+
+func (e *EnumRol) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EnumRol(s)
+	case string:
+		*e = EnumRol(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EnumRol: %T", src)
+	}
+	return nil
+}
+
+type NullEnumRol struct {
+	EnumRol EnumRol `json:"enum_rol"`
+	Valid   bool    `json:"valid"` // Valid is true if EnumRol is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEnumRol) Scan(value interface{}) error {
+	if value == nil {
+		ns.EnumRol, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EnumRol.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEnumRol) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EnumRol), nil
+}
 
 type Alumno struct {
 	UsuarioID        int32          `json:"usuario_id"`
@@ -18,40 +109,51 @@ type Alumno struct {
 }
 
 type Clase struct {
-	ID         int32         `json:"id"`
-	Dias       string        `json:"dias"`
-	Hora       time.Time     `json:"hora"`
-	MaxAlumnos int32         `json:"max_alumnos"`
-	ProfesorID sql.NullInt32 `json:"profesor_id"`
+	ID         int32  `json:"id"`
+	Nombre     string `json:"nombre"`
+	MaxAlumnos int32  `json:"max_alumnos"`
+	ProfesorID int32  `json:"profesor_id"`
+}
+
+type ClaseHorario struct {
+	ID         int32     `json:"id"`
+	ClaseID    int32     `json:"clase_id"`
+	DiaSemana  string    `json:"dia_semana"`
+	HoraInicio time.Time `json:"hora_inicio"`
 }
 
 type Ejercicio struct {
-	ID          int32          `json:"id"`
-	Nombre      string         `json:"nombre"`
-	Descripcion sql.NullString `json:"descripcion"`
+	ID            int32          `json:"id"`
+	Nombre        string         `json:"nombre"`
+	Descripcion   sql.NullString `json:"descripcion"`
+	GrupoMuscular sql.NullString `json:"grupo_muscular"`
 }
 
-type InscripcionesClase struct {
-	ClaseID  int32     `json:"clase_id"`
-	AlumnoID int32     `json:"alumno_id"`
-	Dia      string    `json:"dia"`
-	Hora     time.Time `json:"hora"`
+type InscripcionClase struct {
+	ClaseHorarioID   int32        `json:"clase_horario_id"`
+	AlumnoID         int32        `json:"alumno_id"`
+	FechaInscripcion sql.NullTime `json:"fecha_inscripcion"`
 }
 
-type Profesore struct {
+type Profesor struct {
 	UsuarioID    int32          `json:"usuario_id"`
-	Horario      sql.NullString `json:"horario"`
 	Especialidad sql.NullString `json:"especialidad"`
 }
 
 type Rutina struct {
-	ID              int32 `json:"id"`
-	DuracionSemanas int32 `json:"duracion_semanas"`
+	ID              int32  `json:"id"`
+	Nombre          string `json:"nombre"`
+	DuracionSemanas int32  `json:"duracion_semanas"`
+	ProfesorID      int32  `json:"profesor_id"`
 }
 
 type RutinaEjercicio struct {
-	RutinaID    int32 `json:"rutina_id"`
-	EjercicioID int32 `json:"ejercicio_id"`
+	RutinaID         int32         `json:"rutina_id"`
+	EjercicioID      int32         `json:"ejercicio_id"`
+	Orden            int32         `json:"orden"`
+	Series           sql.NullInt32 `json:"series"`
+	Repeticiones     sql.NullInt32 `json:"repeticiones"`
+	DescansoSegundos sql.NullInt32 `json:"descanso_segundos"`
 }
 
 type Usuario struct {
