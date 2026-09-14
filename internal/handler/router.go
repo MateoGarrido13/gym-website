@@ -1,0 +1,28 @@
+package handler
+
+import (
+	"net/http"
+
+	"PRACTICO_DOS/internal/service"
+)
+
+func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, staticDir string) http.Handler {
+	ej := NewEjercicioHandler(ejercicios)
+	al := NewAlumnoHandler(alumnos)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/ejercicios", ej.Create)
+	mux.HandleFunc("GET /api/ejercicios", ej.List)
+	mux.HandleFunc("GET /api/ejercicios/{id}", ej.Get)
+	mux.HandleFunc("PUT /api/ejercicios/{id}", ej.Update)
+	mux.HandleFunc("DELETE /api/ejercicios/{id}", ej.Delete)
+
+	mux.HandleFunc("POST /api/alumnos", al.Create)
+	mux.HandleFunc("GET /api/alumnos", al.List)
+	mux.HandleFunc("GET /api/alumnos/{id}", al.Get)
+	mux.HandleFunc("PUT /api/alumnos/{id}", al.Update)
+	mux.HandleFunc("DELETE /api/alumnos/{id}", al.Delete)
+
+	mux.Handle("/", http.FileServer(http.Dir(staticDir)))
+	return mux
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/lib/pq"
 )
 
+
 func horaDePrueba(hora, minuto int) time.Time {
 	return time.Date(1970, 1, 1, hora, minuto, 0, 0, time.UTC)
 }
@@ -24,6 +25,7 @@ func esCodigoPostgres(err error, codigo string) bool {
 	return errors.As(err, &pqErr) && string(pqErr.Code) == codigo
 }
 
+// helpers para los tests
 func createProfesorDePrueba(t *testing.T) db.GetProfesorCompletoRow {
 	t.Helper()
 

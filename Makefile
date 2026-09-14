@@ -1,7 +1,7 @@
 GOBIN := $(shell go env GOPATH)/bin
 SQLC := $(GOBIN)/sqlc
 
-.PHONY: test sqlc build up down
+.PHONY: test sqlc build up down run
 
 #PATH REAL, SIN PHONY para que se chequee cada vez que se ejecuta el make
 $(SQLC):
@@ -15,6 +15,10 @@ sqlc: $(SQLC)
 #Se compila pero no se usa en el test
 build: sqlc
 	@go build -o main main.go
+
+# Postgres debe estar arriba (make up). No baja contenedores al salir.
+run: build
+	@./main
 
 up:
 	@docker compose down -v

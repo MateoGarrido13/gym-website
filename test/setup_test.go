@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// TODOS USARAN ESTA CONEXION 
 const connStr = "host=localhost port=5432 user=postgres password=postgres dbname=tp2_db sslmode=disable"
 
 var (
@@ -21,7 +22,7 @@ var (
 
 func setup() {
 	var err error
-	dbConn, err = sql.Open("postgres", connStr)
+	dbConn, err = sql.Open("postgres", connStr) // LEVANTA LA CONEXION 
 	if err != nil {
 		log.Fatalf("no se pudo preparar la conexión: %v", err)
 	}
@@ -35,7 +36,7 @@ func setup() {
 }
 
 func TestMain(m *testing.M) {
-	setup()
+	setup() // LEVANTA LA CONEXION A LA BASE DE DATOS
 	code := m.Run()
 	_ = dbConn.Close()
 	os.Exit(code)
