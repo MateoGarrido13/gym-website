@@ -2,37 +2,14 @@ package test
 
 import (
 	db "PRACTICO_DOS/db/sqlc"
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
-
-	_ "github.com/lib/pq"
 )
 
-const connStr = "host=localhost port=5432 user=postgres password=postgres dbname=tp2_db sslmode=disable"
-
-func setup(t *testing.T) (*db.Queries, context.Context) {
-	t.Helper()
-
-	dbConn, err := sql.Open("postgres", connStr)
-	if err != nil {
-		t.Fatalf("no se pudo preparar la conexión: %v", err)
-	}
-	t.Cleanup(func() {
-		_ = dbConn.Close()
-	})
-
-	if err = dbConn.Ping(); err != nil {
-		t.Fatalf("no se pudo conectar a la base de datos: %v", err)
-	}
-
-	return db.New(dbConn), context.Background()
-}
-
-func createUsuarioDePrueba(t *testing.T, queries *db.Queries, ctx context.Context) db.CreateUsuarioRow {
+func createUsuarioDePrueba(t *testing.T) db.CreateUsuarioRow {
 	t.Helper()
 
 	params := db.CreateUsuarioParams{ // creamos un struct con los parametros para el createUsuario
@@ -57,7 +34,6 @@ func createUsuarioDePrueba(t *testing.T, queries *db.Queries, ctx context.Contex
 }
 
 func TestCreateUsuario(t *testing.T) {
-	queries, ctx := setup(t)
 	params := db.CreateUsuarioParams{ // creamos un struct con los parametros para el createUsuario
 		Email:      fmt.Sprintf("create-%d@example.com", time.Now().UnixNano()),
 		Contrasena: "secret123",
@@ -96,8 +72,7 @@ func TestCreateUsuario(t *testing.T) {
 }
 
 func TestGetUsuario(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createUsuarioDePrueba(t, queries, ctx)
+	creado := createUsuarioDePrueba(t)
 
 	usuario, err := queries.GetUsuario(ctx, creado.ID)
 	if err != nil {
@@ -119,8 +94,7 @@ func TestGetUsuario(t *testing.T) {
 }
 
 func TestUpdateUsuario(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createUsuarioDePrueba(t, queries, ctx)
+	creado := createUsuarioDePrueba(t)
 
 	updateParams := db.UpdateUsuarioParams{
 		ID:         creado.ID,
@@ -155,8 +129,7 @@ func TestUpdateUsuario(t *testing.T) {
 }
 
 func TestDeleteUsuario(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createUsuarioDePrueba(t, queries, ctx)
+	creado := createUsuarioDePrueba(t)
 
 	if err := queries.DeleteUsuario(ctx, creado.ID); err != nil {
 		t.Fatalf("DELETE falló: %v", err)
@@ -168,5 +141,78 @@ func TestDeleteUsuario(t *testing.T) {
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("error inesperado al verificar el DELETE: %v", err)
+	}
+}
+
+func TestCreateUsuarioProfesor(t *testing.T) {
+	params := db.CreateUsuarioParams{
+		Email:      fmt.Sprintf("profesor-user-%d@example.com", time.Now().UnixNano()),
+		Contrasena: "secret123",
+		Nombre:     "Ana",
+		Apellido:   "Coach",
+		Telefono:   sql.NullString{Valid: false},
+		Rol:        "profesor",
+	}
+
+	usuario, err := queries.CreateUsuario(ctx, params)
+	if err != nil {
+		t.Fatalf("CREATE de usuario profesor falló: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = queries.DeleteUsuario(ctx, usuario.ID)
+	})
+
+	if usuario.Rol != "profesor" {
+		t.Errorf("rol = %q, se esperaba %q", usuario.Rol, "profesor")
+	}
+	if usuario.Email != params.Email {
+		t.Errorf("email = %q, se esperaba %q", usuario.Email, params.Email)
+	}
+	if usuario.Telefono.Valid {
+		t.Error("telefono debía ser NULL")
+	}
+}
+
+func TestCreateUsuarioEmailDuplicado(t *testing.T) {
+	creado := createUsuarioDePrueba(t)
+
+	_, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+		Email:      creado.Email,
+		Contrasena: "otraClave",
+		Nombre:     "Otro",
+		Apellido:   "Usuario",
+		Rol:        "alumno",
+	})
+	if err == nil {
+		t.Fatal("CREATE debió fallar por email duplicado")
+	}
+	if !esCodigoPostgres(err, "23505") {
+		t.Fatalf("se esperaba unique violation (23505), se obtuvo: %v", err)
+	}
+}
+
+func TestCreateUsuarioRolInvalido(t *testing.T) {
+	_, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+		Email:      fmt.Sprintf("rol-invalido-%d@example.com", time.Now().UnixNano()),
+		Contrasena: "secret123",
+		Nombre:     "Rol",
+		Apellido:   "Invalido",
+		Rol:        "admin",
+	})
+	if err == nil {
+		t.Fatal("CREATE debió fallar por rol inválido")
+	}
+	if !esCodigoPostgres(err, "22P02") {
+		t.Fatalf("se esperaba invalid_text_representation (22P02), se obtuvo: %v", err)
+	}
+}
+
+func TestGetUsuarioInexistente(t *testing.T) {
+	_, err := queries.GetUsuario(ctx, -1)
+	if err == nil {
+		t.Fatal("GetUsuario debió fallar con un id inexistente")
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("error inesperado: %v", err)
 	}
 }

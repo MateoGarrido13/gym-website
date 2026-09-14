@@ -2,7 +2,6 @@ package test
 
 import (
 	db "PRACTICO_DOS/db/sqlc"
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-func createAlumnoDePrueba(t *testing.T, queries *db.Queries, ctx context.Context) db.GetAlumnoCompletoRow {
+func createAlumnoDePrueba(t *testing.T) db.GetAlumnoCompletoRow {
 	t.Helper()
 
 	params := db.CreateAlumnoParams{
@@ -44,8 +43,6 @@ func mismaFecha(a, b time.Time) bool {
 }
 
 func TestCreateAlumno(t *testing.T) {
-	queries, ctx := setup(t)
-
 	fechaInscripcion := time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC)
 	fechaVto := time.Date(2026, 10, 10, 0, 0, 0, 0, time.UTC)
 	params := db.CreateAlumnoParams{
@@ -100,8 +97,7 @@ func TestCreateAlumno(t *testing.T) {
 }
 
 func TestGetAlumno(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createAlumnoDePrueba(t, queries, ctx)
+	creado := createAlumnoDePrueba(t)
 
 	alumno, err := queries.GetAlumnoCompleto(ctx, creado.ID)
 	if err != nil {
@@ -134,8 +130,7 @@ func TestGetAlumno(t *testing.T) {
 }
 
 func TestUpdateAlumno(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createAlumnoDePrueba(t, queries, ctx)
+	creado := createAlumnoDePrueba(t)
 
 	nuevaFechaVto := time.Date(2026, 12, 1, 0, 0, 0, 0, time.UTC)
 	updateParams := db.UpdateAlumnoDetallesParams{
@@ -166,8 +161,7 @@ func TestUpdateAlumno(t *testing.T) {
 }
 
 func TestDeleteAlumno(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createAlumnoDePrueba(t, queries, ctx)
+	creado := createAlumnoDePrueba(t)
 
 	if err := queries.DeleteUsuario(ctx, creado.ID); err != nil {
 		t.Fatalf("DELETE del usuario padre falló: %v", err)
@@ -191,8 +185,7 @@ func TestDeleteAlumno(t *testing.T) {
 }
 
 func TestListAlumnos(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createAlumnoDePrueba(t, queries, ctx)
+	creado := createAlumnoDePrueba(t)
 
 	alumnos, err := queries.ListAlumnosCompletos(ctx)
 	if err != nil {
@@ -214,5 +207,78 @@ func TestListAlumnos(t *testing.T) {
 	}
 	if !encontrado {
 		t.Fatalf("el alumno creado (ID %d) no apareció en el listado", creado.ID)
+	}
+}
+
+func TestAsignarRutinaAAlumno(t *testing.T) {
+	profesor := createProfesorDePrueba(t)
+	rutina := createRutinaDePrueba(t, profesor.ID)
+	alumno := createAlumnoDePrueba(t)
+
+	if err := queries.UpdateAlumnoDetalles(ctx, db.UpdateAlumnoDetallesParams{
+		UsuarioID: alumno.ID,
+		FechaVto:  alumno.FechaVto,
+		TipoPlan:  alumno.TipoPlan,
+		RutinaID:  sql.NullInt32{Int32: rutina.ID, Valid: true},
+	}); err != nil {
+		t.Fatalf("asignar rutina falló: %v", err)
+	}
+
+	actualizado, err := queries.GetAlumnoCompleto(ctx, alumno.ID)
+	if err != nil {
+		t.Fatalf("READ después de asignar rutina falló: %v", err)
+	}
+	if !actualizado.RutinaID.Valid || actualizado.RutinaID.Int32 != rutina.ID {
+		t.Errorf("rutina_id = %v, se esperaba %d", actualizado.RutinaID, rutina.ID)
+	}
+}
+
+func TestAsignarRutinaInexistenteAAlumno(t *testing.T) {
+	alumno := createAlumnoDePrueba(t)
+
+	err := queries.UpdateAlumnoDetalles(ctx, db.UpdateAlumnoDetallesParams{
+		UsuarioID: alumno.ID,
+		FechaVto:  alumno.FechaVto,
+		TipoPlan:  alumno.TipoPlan,
+		RutinaID:  sql.NullInt32{Int32: -1, Valid: true},
+	})
+	if err == nil {
+		t.Fatal("asignar una rutina inexistente debió fallar")
+	}
+	if !esCodigoPostgres(err, "23503") {
+		t.Fatalf("se esperaba violación de FK (23503), se obtuvo: %v", err)
+	}
+}
+
+func TestGetAlumnoInexistente(t *testing.T) {
+	_, err := queries.GetAlumnoCompleto(ctx, -1)
+	if err == nil {
+		t.Fatal("GetAlumnoCompleto debió fallar con un id inexistente")
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("error inesperado: %v", err)
+	}
+}
+
+func TestDeleteRutinaAsignadaAAlumno(t *testing.T) {
+	profesor := createProfesorDePrueba(t)
+	rutina := createRutinaDePrueba(t, profesor.ID)
+	alumno := createAlumnoDePrueba(t)
+
+	if err := queries.UpdateAlumnoDetalles(ctx, db.UpdateAlumnoDetallesParams{
+		UsuarioID: alumno.ID,
+		FechaVto:  alumno.FechaVto,
+		TipoPlan:  alumno.TipoPlan,
+		RutinaID:  sql.NullInt32{Int32: rutina.ID, Valid: true},
+	}); err != nil {
+		t.Fatalf("asignar rutina falló: %v", err)
+	}
+
+	err := queries.DeleteRutina(ctx, rutina.ID)
+	if err == nil {
+		t.Fatal("no se debió poder borrar una rutina asignada a un alumno")
+	}
+	if !esCodigoPostgres(err, "23503") {
+		t.Fatalf("se esperaba violación de FK (23503), se obtuvo: %v", err)
 	}
 }

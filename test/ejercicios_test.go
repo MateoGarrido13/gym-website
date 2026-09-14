@@ -2,7 +2,6 @@ package test
 
 import (
 	db "PRACTICO_DOS/db/sqlc"
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-func createEjercicioDePrueba(t *testing.T, queries *db.Queries, ctx context.Context) db.Ejercicio {
+func createEjercicioDePrueba(t *testing.T) db.Ejercicio {
 	t.Helper()
 
 	// creamos un struct con los parametros para el createEjercicio
@@ -32,8 +31,6 @@ func createEjercicioDePrueba(t *testing.T, queries *db.Queries, ctx context.Cont
 }
 
 func TestCreateEjercicio(t *testing.T) {
-	queries, ctx := setup(t)
-
 	params := db.CreateEjercicioParams{ // creamos un struct con los parametros para el createEjercicio
 		Nombre:      fmt.Sprintf("press-banca-%d", time.Now().UnixNano()),
 		Descripcion: sql.NullString{String: "Ejercicio de pecho", Valid: true},
@@ -59,8 +56,7 @@ func TestCreateEjercicio(t *testing.T) {
 }
 
 func TestGetEjercicio(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createEjercicioDePrueba(t, queries, ctx)
+	creado := createEjercicioDePrueba(t)
 
 	ejercicio, err := queries.GetEjercicio(ctx, creado.ID)
 	if err != nil {
@@ -79,8 +75,7 @@ func TestGetEjercicio(t *testing.T) {
 }
 
 func TestUpdateEjercicio(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createEjercicioDePrueba(t, queries, ctx)
+	creado := createEjercicioDePrueba(t)
 
 	updateParams := db.UpdateEjercicioParams{
 		ID:          creado.ID,
@@ -106,8 +101,7 @@ func TestUpdateEjercicio(t *testing.T) {
 }
 
 func TestDeleteEjercicio(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createEjercicioDePrueba(t, queries, ctx)
+	creado := createEjercicioDePrueba(t)
 
 	if err := queries.DeleteEjercicio(ctx, creado.ID); err != nil {
 		t.Fatalf("DELETE falló: %v", err)
@@ -123,8 +117,7 @@ func TestDeleteEjercicio(t *testing.T) {
 }
 
 func TestListEjercicios(t *testing.T) {
-	queries, ctx := setup(t)
-	creado := createEjercicioDePrueba(t, queries, ctx)
+	creado := createEjercicioDePrueba(t)
 
 	ejercicios, err := queries.ListEjercicios(ctx)
 	if err != nil {
@@ -143,5 +136,66 @@ func TestListEjercicios(t *testing.T) {
 	}
 	if !encontrado {
 		t.Fatalf("el ejercicio creado (ID %d) no apareció en el listado", creado.ID)
+	}
+}
+
+func TestCreateEjercicioConGrupoMuscular(t *testing.T) {
+	params := db.CreateEjercicioParams{
+		Nombre:        fmt.Sprintf("dominadas-%d", time.Now().UnixNano()),
+		Descripcion:   sql.NullString{String: "Ejercicio de espalda", Valid: true},
+		GrupoMuscular: sql.NullString{String: "espalda", Valid: true},
+	}
+
+	ejercicio, err := queries.CreateEjercicio(ctx, params)
+	if err != nil {
+		t.Fatalf("CREATE falló: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = queries.DeleteEjercicio(ctx, ejercicio.ID)
+	})
+
+	if ejercicio.GrupoMuscular.String != params.GrupoMuscular.String {
+		t.Errorf("grupo_muscular = %q, se esperaba %q", ejercicio.GrupoMuscular.String, params.GrupoMuscular.String)
+	}
+
+	leido, err := queries.GetEjercicio(ctx, ejercicio.ID)
+	if err != nil {
+		t.Fatalf("READ falló: %v", err)
+	}
+	if leido.GrupoMuscular.String != params.GrupoMuscular.String {
+		t.Errorf("grupo_muscular leído = %q, se esperaba %q", leido.GrupoMuscular.String, params.GrupoMuscular.String)
+	}
+}
+
+func TestUpdateEjercicioGrupoMuscular(t *testing.T) {
+	creado := createEjercicioDePrueba(t)
+
+	updateParams := db.UpdateEjercicioParams{
+		ID:            creado.ID,
+		Nombre:        creado.Nombre,
+		Descripcion:   creado.Descripcion,
+		GrupoMuscular: sql.NullString{String: "piernas", Valid: true},
+	}
+
+	if err := queries.UpdateEjercicio(ctx, updateParams); err != nil {
+		t.Fatalf("UPDATE falló: %v", err)
+	}
+
+	ejercicio, err := queries.GetEjercicio(ctx, creado.ID)
+	if err != nil {
+		t.Fatalf("READ después del UPDATE falló: %v", err)
+	}
+	if ejercicio.GrupoMuscular.String != updateParams.GrupoMuscular.String {
+		t.Errorf("grupo_muscular = %q, se esperaba %q", ejercicio.GrupoMuscular.String, updateParams.GrupoMuscular.String)
+	}
+}
+
+func TestGetEjercicioInexistente(t *testing.T) {
+	_, err := queries.GetEjercicio(ctx, -1)
+	if err == nil {
+		t.Fatal("GetEjercicio debió fallar con un id inexistente")
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("error inesperado: %v", err)
 	}
 }
