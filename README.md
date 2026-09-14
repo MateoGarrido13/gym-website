@@ -89,3 +89,31 @@ En este TP la capa de persistencia y los tests cubren el modelo de datos; `main.
 - PostgreSQL `15-alpine` (imagen Docker)
 - Docker Compose `3.8`
 - `github.com/lib/pq` `v1.12.3`
+
+## ADICIONAL
+
+Además de la persistencia y los tests del TP, **en la rama tp3 hay una API HTTP de muestra** para ejercicios y alumnos. Quisimos aprozimarnos a una implementacion mas prolija con handlers y servicios, en lugar de llamarlo solo desde el paquete `testing`.No reemplaza `make test`: sirve para ver el mismo `*db.Queries` usado desde un servidor.
+
+La utilidad es tener un  patrón de capas (handler → servicio → puerto; `*db.Queries` implementa el puerto) y comprobar el modelo por HTTP. Ejercicios cubren un CRUD directo. Alumnos cubren el alta compuesta usuario+alumno (`CreateAlumno`) y el borrado por cascade sobre `usuario`. El resto de tablas sigue cubierto por sqlc y por los tests de integración.
+
+Cómo probarla (Postgres tiene que estar arriba; `make test` la baja al terminar):
+
+```bash
+make up
+make run
+```
+
+El servidor queda en `http://localhost:8080`. `GET /` sirve `static/`. Las rutas JSON están bajo `/api/ejercicios` y `/api/alumnos` (ver la tabla en **API (muestra)**).
+
+```bash
+curl -s http://localhost:8080/
+curl -s http://localhost:8080/api/ejercicios
+curl -s -X POST http://localhost:8080/api/ejercicios \
+  -H 'Content-Type: application/json' \
+  -d '{"nombre":"sentadilla","descripcion":"barra","grupo_muscular":"piernas"}'
+curl -s -X POST http://localhost:8080/api/alumnos \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"a@example.com","contrasena":"secret123","nombre":"Ana","apellido":"Lopez","fecha_inscripcion":"2026-09-10","tipo_plan":"mensual"}'
+```
+
+Si `make up` falla porque el puerto `5432` ya está ocupado, alcanza con que esa instancia tenga la base `tp2_db` y el schema; `make run` usa la misma cadena que los tests. Al terminar: `make down` (solo si levantaste Compose en este paso).
