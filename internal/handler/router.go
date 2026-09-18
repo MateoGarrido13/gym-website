@@ -6,9 +6,10 @@ import (
 	"PRACTICO_DOS/internal/service"
 )
 
-func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, staticDir string) http.Handler {
+func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, rutinas *service.RutinaService, staticDir string) http.Handler {
 	ej := NewEjercicioHandler(ejercicios)
 	al := NewAlumnoHandler(alumnos)
+	ru := NewRutinaHandler(rutinas)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/ejercicios", ej.Create)
@@ -22,6 +23,12 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	mux.HandleFunc("GET /api/alumnos/{id}", al.Get)
 	mux.HandleFunc("PUT /api/alumnos/{id}", al.Update)
 	mux.HandleFunc("DELETE /api/alumnos/{id}", al.Delete)
+
+	mux.HandleFunc("POST /api/rutinas", ru.Create)
+	mux.HandleFunc("GET /api/rutinas", ru.List)
+	mux.HandleFunc("GET /api/rutinas/{id}", ru.Get)
+	mux.HandleFunc("PUT /api/rutinas/{id}", ru.Update)
+	mux.HandleFunc("DELETE /api/rutinas/{id}", ru.Delete)
 
 	mux.Handle("/", http.FileServer(http.Dir(staticDir)))
 	return mux

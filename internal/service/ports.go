@@ -26,3 +26,13 @@ type AlumnoStore interface {
 	UpdateAlumnoDetalles(ctx context.Context, arg db.UpdateAlumnoDetallesParams) error
 	DeleteUsuario(ctx context.Context, id int32) error
 }
+
+// RutinaStore es el puerto de persistencia de rutinas.
+// *db.Queries lo satisface sin adaptador.
+type RutinaStore interface {
+	CreateRutina(ctx context.Context, arg db.CreateRutinaParams) (db.Rutina, error)
+	GetRutina(ctx context.Context, id int32) (db.Rutina, error)
+	ListRutinas(ctx context.Context) ([]db.Rutina, error)
+	UpdateRutina(ctx context.Context, arg db.UpdateRutinaParams) error
+	DeleteRutina(ctx context.Context, id int32) error
+}
