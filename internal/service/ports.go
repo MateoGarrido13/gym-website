@@ -45,3 +45,22 @@ type RutinaEjercicioStore interface {
 	UpdateRutinaEjercicio(ctx context.Context, arg db.UpdateRutinaEjercicioParams) (db.RutinaEjercicio, error)
 	DeleteEjercicioDeRutina(ctx context.Context, arg db.DeleteEjercicioDeRutinaParams) error
 }
+
+// ClaseStore es el puerto de persistencia de clases.
+// *db.Queries lo satisface sin adaptador.
+type ClaseStore interface {
+	CreateClase(ctx context.Context, arg db.CreateClaseParams) (db.Clase, error)
+	GetClase(ctx context.Context, id int32) (db.Clase, error)
+	ListClases(ctx context.Context) ([]db.Clase, error)
+	UpdateClase(ctx context.Context, arg db.UpdateClaseParams) error
+	DeleteClase(ctx context.Context, id int32) error
+}
+
+// ClaseHorarioStore es el puerto de los horarios de una clase.
+// El listado es por clase. Get y Delete usan el id del horario.
+type ClaseHorarioStore interface {
+	CreateClaseHorario(ctx context.Context, arg db.CreateClaseHorarioParams) (db.ClaseHorario, error)
+	GetClaseHorario(ctx context.Context, id int32) (db.ClaseHorario, error)
+	ListHorariosDeClase(ctx context.Context, claseID int32) ([]db.ClaseHorario, error)
+	DeleteClaseHorario(ctx context.Context, id int32) error
+}
