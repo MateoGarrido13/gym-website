@@ -64,3 +64,12 @@ type ClaseHorarioStore interface {
 	ListHorariosDeClase(ctx context.Context, claseID int32) ([]db.ClaseHorario, error)
 	DeleteClaseHorario(ctx context.Context, id int32) error
 }
+
+// InscripcionStore es el puerto de las inscripciones a un horario.
+// El cupo se lee con GetCupoDeHorario; la comparación la hace el servicio.
+type InscripcionStore interface {
+	CreateInscripcion(ctx context.Context, arg db.CreateInscripcionParams) (db.InscripcionClase, error)
+	ListInscriptos(ctx context.Context, claseHorarioID int32) ([]db.ListInscriptosRow, error)
+	DeleteInscripcion(ctx context.Context, arg db.DeleteInscripcionParams) error
+	GetCupoDeHorario(ctx context.Context, id int32) (db.GetCupoDeHorarioRow, error)
+}

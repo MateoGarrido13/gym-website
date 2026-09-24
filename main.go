@@ -39,7 +39,8 @@ func main() {
 	rutinas_ejercicio := service.NewRutinaEjercicioService(queries)
 	clases := service.NewClaseService(queries)
 	clases_horario := service.NewClaseHorarioService(queries)
-	router := handler.NewRouter(ejercicios, alumnos, rutinas, rutinas_ejercicio, clases, clases_horario, "./static")
+	inscripciones := service.NewInscripcionService(queries)
+	router := handler.NewRouter(ejercicios, alumnos, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, "./static")
 
 	port := os.Getenv("PORT")
 	if port == "" {

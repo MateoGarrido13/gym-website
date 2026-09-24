@@ -62,6 +62,10 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
+	if errors.Is(err, service.ErrConflict) {
+		writeError(w, http.StatusConflict, err.Error())
+		return
+	}
 
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) {

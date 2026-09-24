@@ -13,3 +13,12 @@ RETURNING clase_horario_id, alumno_id, fecha_inscripcion;
 -- name: DeleteInscripcion :exec
 DELETE FROM inscripcion_clase
 WHERE clase_horario_id = $1 AND alumno_id = $2;
+
+-- name: GetCupoDeHorario :one
+SELECT c.max_alumnos,
+       COUNT(ic.alumno_id)::int AS cantidad_inscriptos
+FROM clase_horario ch
+JOIN clase c ON c.id = ch.clase_id
+LEFT JOIN inscripcion_clase ic ON ic.clase_horario_id = ch.id
+WHERE ch.id = $1
+GROUP BY c.max_alumnos;

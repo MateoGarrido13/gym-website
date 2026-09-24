@@ -6,13 +6,14 @@ import (
 	"PRACTICO_DOS/internal/service"
 )
 
-func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, staticDir string) http.Handler {
+func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, staticDir string) http.Handler {
 	ej := NewEjercicioHandler(ejercicios)
 	al := NewAlumnoHandler(alumnos)
 	ru := NewRutinaHandler(rutinas)
 	re := NewRutinaEjercicioHandler(rutinas_ejercicio)
 	cl := NewClaseHandler(clases)
 	ch := NewClaseHorarioHandler(clases_horario)
+	ins := NewInscripcionHandler(inscripciones)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/ejercicios", ej.Create)
@@ -48,6 +49,10 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	mux.HandleFunc("GET /api/clases/{id}/horarios", ch.List)
 	mux.HandleFunc("GET /api/horarios/{id}", ch.Get)
 	mux.HandleFunc("DELETE /api/horarios/{id}", ch.Delete)
+
+	mux.HandleFunc("POST /api/horarios/{id}/inscripciones", ins.Create)
+	mux.HandleFunc("GET /api/horarios/{id}/inscripciones", ins.List)
+	mux.HandleFunc("DELETE /api/horarios/{id}/inscripciones/{alumno_id}", ins.Delete)
 
 	mux.Handle("/", http.FileServer(http.Dir(staticDir)))
 	return mux

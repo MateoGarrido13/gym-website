@@ -42,6 +42,28 @@ func (q *Queries) DeleteInscripcion(ctx context.Context, arg DeleteInscripcionPa
 	return err
 }
 
+const getCupoDeHorario = `-- name: GetCupoDeHorario :one
+SELECT c.max_alumnos,
+       COUNT(ic.alumno_id)::int AS cantidad_inscriptos
+FROM clase_horario ch
+JOIN clase c ON c.id = ch.clase_id
+LEFT JOIN inscripcion_clase ic ON ic.clase_horario_id = ch.id
+WHERE ch.id = $1
+GROUP BY c.max_alumnos
+`
+
+type GetCupoDeHorarioRow struct {
+	MaxAlumnos         int32 `json:"max_alumnos"`
+	CantidadInscriptos int32 `json:"cantidad_inscriptos"`
+}
+
+func (q *Queries) GetCupoDeHorario(ctx context.Context, id int32) (GetCupoDeHorarioRow, error) {
+	row := q.db.QueryRowContext(ctx, getCupoDeHorario, id)
+	var i GetCupoDeHorarioRow
+	err := row.Scan(&i.MaxAlumnos, &i.CantidadInscriptos)
+	return i, err
+}
+
 const listInscriptos = `-- name: ListInscriptos :many
 SELECT ic.alumno_id, u.nombre, u.apellido
 FROM inscripcion_clase ic

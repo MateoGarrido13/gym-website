@@ -10,6 +10,7 @@ import (
 var (
 	ErrInvalid  = errors.New("datos inválidos")
 	ErrNotFound = errors.New("no encontrado")
+	ErrConflict = errors.New("conflicto")
 )
 
 func fromNullString(v sql.NullString) *string {
