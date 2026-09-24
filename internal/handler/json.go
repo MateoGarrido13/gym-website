@@ -42,7 +42,11 @@ func readJSON(r *http.Request, dst any) error {
 }
 
 func pathID(r *http.Request) (int32, error) {
-	n, err := strconv.ParseInt(r.PathValue("id"), 10, 32)
+	return pathValueID(r, "id")
+}
+
+func pathValueID(r *http.Request, name string) (int32, error) {
+	n, err := strconv.ParseInt(r.PathValue(name), 10, 32)
 	if err != nil || n <= 0 {
 		return 0, errors.New("id inválido")
 	}

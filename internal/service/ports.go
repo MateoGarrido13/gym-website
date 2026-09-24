@@ -36,3 +36,12 @@ type RutinaStore interface {
 	UpdateRutina(ctx context.Context, arg db.UpdateRutinaParams) error
 	DeleteRutina(ctx context.Context, id int32) error
 }
+
+// RutinaEjercicioStore es el puerto de la tabla intermedia rutina_ejercicio.
+// El alta y la baja usan las queries que ya existían. El listado es por rutina.
+type RutinaEjercicioStore interface {
+	AddEjercicioARutina(ctx context.Context, arg db.AddEjercicioARutinaParams) error
+	ListRutinaEjercicios(ctx context.Context, rutinaID int32) ([]db.RutinaEjercicio, error)
+	UpdateRutinaEjercicio(ctx context.Context, arg db.UpdateRutinaEjercicioParams) (db.RutinaEjercicio, error)
+	DeleteEjercicioDeRutina(ctx context.Context, arg db.DeleteEjercicioDeRutinaParams) error
+}

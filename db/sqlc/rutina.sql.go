@@ -105,6 +105,43 @@ func (q *Queries) GetRutina(ctx context.Context, id int32) (Rutina, error) {
 	return i, err
 }
 
+const listRutinaEjercicios = `-- name: ListRutinaEjercicios :many
+SELECT rutina_id, ejercicio_id, orden, series, repeticiones, descanso_segundos
+FROM rutina_ejercicio
+WHERE rutina_id = $1
+ORDER BY orden
+`
+
+func (q *Queries) ListRutinaEjercicios(ctx context.Context, rutinaID int32) ([]RutinaEjercicio, error) {
+	rows, err := q.db.QueryContext(ctx, listRutinaEjercicios, rutinaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RutinaEjercicio
+	for rows.Next() {
+		var i RutinaEjercicio
+		if err := rows.Scan(
+			&i.RutinaID,
+			&i.EjercicioID,
+			&i.Orden,
+			&i.Series,
+			&i.Repeticiones,
+			&i.DescansoSegundos,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRutinas = `-- name: ListRutinas :many
 SELECT id, nombre, duracion_semanas, profesor_id
 FROM rutina
@@ -153,4 +190,41 @@ type UpdateRutinaParams struct {
 func (q *Queries) UpdateRutina(ctx context.Context, arg UpdateRutinaParams) error {
 	_, err := q.db.ExecContext(ctx, updateRutina, arg.Nombre, arg.DuracionSemanas, arg.ID)
 	return err
+}
+
+const updateRutinaEjercicio = `-- name: UpdateRutinaEjercicio :one
+UPDATE rutina_ejercicio
+SET orden = $1, series = $2, repeticiones = $3, descanso_segundos = $4
+WHERE rutina_id = $5 AND ejercicio_id = $6
+RETURNING rutina_id, ejercicio_id, orden, series, repeticiones, descanso_segundos
+`
+
+type UpdateRutinaEjercicioParams struct {
+	Orden            int32         `json:"orden"`
+	Series           sql.NullInt32 `json:"series"`
+	Repeticiones     sql.NullInt32 `json:"repeticiones"`
+	DescansoSegundos sql.NullInt32 `json:"descanso_segundos"`
+	RutinaID         int32         `json:"rutina_id"`
+	EjercicioID      int32         `json:"ejercicio_id"`
+}
+
+func (q *Queries) UpdateRutinaEjercicio(ctx context.Context, arg UpdateRutinaEjercicioParams) (RutinaEjercicio, error) {
+	row := q.db.QueryRowContext(ctx, updateRutinaEjercicio,
+		arg.Orden,
+		arg.Series,
+		arg.Repeticiones,
+		arg.DescansoSegundos,
+		arg.RutinaID,
+		arg.EjercicioID,
+	)
+	var i RutinaEjercicio
+	err := row.Scan(
+		&i.RutinaID,
+		&i.EjercicioID,
+		&i.Orden,
+		&i.Series,
+		&i.Repeticiones,
+		&i.DescansoSegundos,
+	)
+	return i, err
 }

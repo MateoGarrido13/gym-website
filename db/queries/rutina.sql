@@ -30,3 +30,15 @@ VALUES ($1, $2, $3, $4, $5, $6);
 -- name: DeleteEjercicioDeRutina :exec
 DELETE FROM rutina_ejercicio
 WHERE rutina_id = $1 AND ejercicio_id = $2;
+
+-- name: ListRutinaEjercicios :many
+SELECT rutina_id, ejercicio_id, orden, series, repeticiones, descanso_segundos
+FROM rutina_ejercicio
+WHERE rutina_id = $1
+ORDER BY orden;
+
+-- name: UpdateRutinaEjercicio :one
+UPDATE rutina_ejercicio
+SET orden = $1, series = $2, repeticiones = $3, descanso_segundos = $4
+WHERE rutina_id = $5 AND ejercicio_id = $6
+RETURNING rutina_id, ejercicio_id, orden, series, repeticiones, descanso_segundos;
