@@ -1,7 +1,7 @@
 GOBIN := $(shell go env GOPATH)/bin
 SQLC := $(GOBIN)/sqlc
 
-.PHONY: test sqlc build up down run
+.PHONY: test sqlc build up down reset run migrate
 
 #PATH REAL, SIN PHONY para que se chequee cada vez que se ejecuta el make
 $(SQLC):
@@ -20,15 +20,27 @@ build: sqlc
 run: build
 	@./main
 
+# No usa -v: el volumen postgres_data se conserva (datos + schema ya aplicados).
 up:
-	@docker compose down -v
 	@docker compose up -d --wait
 
+# Baja contenedores y deja el volumen intacto.
 down:
+	@docker compose down
+
+# Único target que borra el volumen. Para tests o para rehacer el schema desde cero.
+reset:
 	@docker compose down -v
 
-test: build up
+# Aplica UN .up.sql nuevo sobre la base ya existente. Ejemplo:
+#   make migrate FILE=db/migration/000010_nueva_tabla.up.sql
+migrate:
+	@test -n "$(FILE)" || (echo "uso: make migrate FILE=db/migration/XXXX_nombre.up.sql" && exit 1)
+	@docker compose exec -T postgres-db psql -U postgres -d tp2_db -v ON_ERROR_STOP=1 -f /opt/sql/migration/$$(basename $(FILE))
+
+test: build reset
+	@docker compose up -d --wait
 	@go test ./test/... -v -count=1; \
 	status=$$?;  \
-	make down; \
+	make reset; \
 	exit $$status

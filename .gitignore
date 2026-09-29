@@ -34,3 +34,5 @@ Thumbs.db
 
 # Datos de persistencia local (para evitar subir datos a GitHub)
 postgres_data/
+
+notes/

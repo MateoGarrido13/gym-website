@@ -20,7 +20,7 @@ func (h *AlumnoHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "JSON inválido")
 		return
 	}
-
+	// handler.servicio.creo el contexto y paso la ref 
 	out, err := h.svc.Create(r.Context(), in)
 	if err != nil {
 		writeServiceError(w, err)

@@ -1,0 +1,3 @@
+-- Funciones de PostgreSQL (CREATE OR REPLACE FUNCTION).
+-- Hoy no hay ninguna; este archivo se reaplica sobre la base existente
+-- sin borrar tablas ni filas. Cuando exista una, va acá.

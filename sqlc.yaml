@@ -2,7 +2,19 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "./db/queries/"
-    schema: "./db/schema/"
+    schema:
+      - "./db/migration/000000_create_enums.up.sql"
+      - "./db/migration/000001_create_usuario.up.sql"
+      - "./db/migration/000002_create_profesor.up.sql"
+      - "./db/migration/000003_create_ejercicio.up.sql"
+      - "./db/migration/000004_create_rutina.up.sql"
+      - "./db/migration/000005_create_rutina_ejercicio.up.sql"
+      - "./db/migration/000006_create_alumno.up.sql"
+      - "./db/migration/000007_create_clase.up.sql"
+      - "./db/migration/000008_create_clase_horario.up.sql"
+      - "./db/migration/000009_create_inscripcion_clase.up.sql"
+      - "./db/migration/funciones.sql"
+      - "./db/migration/procedure.sql"
     gen:
       go:
         package: "db"

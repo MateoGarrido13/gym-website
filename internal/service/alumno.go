@@ -17,6 +17,7 @@ func NewAlumnoService(store AlumnoStore) *AlumnoService {
 }
 
 func (s *AlumnoService) Create(ctx context.Context, in AlumnoCreateInput) (Alumno, error) {
+	// aqui ya evaluamos campos onligatorios y algunos formatos
 	email := strings.TrimSpace(in.Email)
 	nombre := strings.TrimSpace(in.Nombre)
 	apellido := strings.TrimSpace(in.Apellido)

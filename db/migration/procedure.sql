@@ -1,0 +1,3 @@
+-- Procedimientos almacenados (CREATE OR REPLACE PROCEDURE).
+-- Hoy no hay ninguno !! ; este archivo se reaplica sobre la base existente
+-- sin borrar tablas ni filas. Cuando exista uno, va acá
