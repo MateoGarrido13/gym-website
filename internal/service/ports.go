@@ -27,6 +27,16 @@ type AlumnoStore interface {
 	DeleteUsuario(ctx context.Context, id int32) error
 }
 
+// ProfesorStore es el puerto de persistencia de profesores.
+// El alta usa CreateProfesor (usuario + profesor), no InsertProfesor suelto.
+type ProfesorStore interface {
+	CreateProfesor(ctx context.Context, arg db.CreateProfesorParams) (db.GetProfesorCompletoRow, error)
+	GetProfesorCompleto(ctx context.Context, id int32) (db.GetProfesorCompletoRow, error)
+	ListProfesoresCompletos(ctx context.Context) ([]db.ListProfesoresCompletosRow, error)
+	UpdateProfesor(ctx context.Context, arg db.UpdateProfesorParams) error
+	DeleteUsuario(ctx context.Context, id int32) error
+}
+
 // RutinaStore es el puerto de persistencia de rutinas.
 // *db.Queries lo satisface sin adaptador.
 type RutinaStore interface {

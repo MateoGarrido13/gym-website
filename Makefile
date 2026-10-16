@@ -1,7 +1,7 @@
 GOBIN := $(shell go env GOPATH)/bin
 SQLC := $(GOBIN)/sqlc
 
-.PHONY: test sqlc build up down reset run migrate
+.PHONY: test test-api sqlc build up down reset run migrate
 
 #PATH REAL, SIN PHONY para que se chequee cada vez que se ejecuta el make
 $(SQLC):
@@ -12,7 +12,7 @@ $(SQLC):
 sqlc: $(SQLC)
 	@$(SQLC) generate
 
-#Se compila pero no se usa en el test
+# Compila el binario del servidor (los tests de Go no lo usan; test sí lo compila).
 build: sqlc
 	@go build -o main main.go
 
@@ -44,3 +44,9 @@ test: build reset
 	status=$$?;  \
 	make reset; \
 	exit $$status
+
+# Prueba la API REST con Hurl. Requiere el servidor levantado en otra terminal
+# (make up && make run) y Hurl instalado (https://hurl.dev).
+# La URL base se configura con la variable `base_url` dentro de requests.hurl.
+test-api:
+	@hurl --test requests.hurl

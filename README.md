@@ -2,7 +2,7 @@
 
 Página web para gimnasios. El objetivo es digitalizar las rutinas, agilizar su actualización y canalizar la inscripción a clases e información en la aplicación. A su vez, mejorar la cercanía con el cliente y su experiencia.
 
-Este repositorio corresponde al TP2: persistencia en PostgreSQL, consultas generadas con sqlc, tests de integración; Adicionalmente se agrega una API HTTP de muestra (ejercicios y alumnos).
+Este repositorio corresponde al TP3: una API REST que expone la lógica de negocio sobre la persistencia en PostgreSQL generada con sqlc. Incluye además los tests de integración del TP2.
 
 ## Cómo ejecutar
 
@@ -11,9 +11,11 @@ Requisitos: Go, Docker y Docker Compose. El puerto `5432` debe estar libre.
 ```bash
 git clone <url-del-repo>
 cd <nombre-del-repo>
-git checkout tp2
+git checkout tp3
 make test
 ```
+
+`make test` ejecuta únicamente los tests de integración de Go (`go test ./test/...`). No levanta el servidor ni ejecuta las pruebas de la API (`make test-api`).
 
 `make test` hace, en orden:
 
@@ -33,7 +35,7 @@ Los datos viven en **PostgreSQL 15** (`postgres:15-alpine`), definido en `docker
 - Puerto: `5432`
 - Volumen: `postgres_data`
 
-El esquema está en `db/schema/schema.sql`. Compose lo monta en `/docker-entrypoint-initdb.d/`, así que Postgres lo aplica **solo la primera vez** que se crea el volumen. Por eso el Makefile usa `docker compose down -v` antes y después: cada corrida arranca con el schema limpio.
+El esquema está en `db/migration/*.up.sql` (enums → tablas). Compose monta `./db/migration` en `/opt/sql/migration` y ejecuta `init.sh`, que aplica los `.up.sql` en orden numérico y luego `funciones.sql` y `procedure.sql`. Postgres lo corre **solo la primera vez** que se crea el volumen. Por eso el Makefile usa `docker compose down -v` antes y después: cada corrida arranca con el schema limpio.
 
 Las consultas SQL están en `db/queries/`. `sqlc.yaml` las traduce a Go en `db/sqlc/` (paquete `db`). Ese código no se edita a mano.
 
@@ -65,11 +67,11 @@ Consultas cubiertas: CRUD de usuario, ejercicio, profesor, rutina y clase; alta/
 
 ## Tests
 
-Paquete `testing` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. Cada `make test` deja la DB en un estado fresco. `make test` **no** arranca el servidor HTTP.
+Paquete `testing` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. Cada `make test` deja la DB en un estado fresco. `make test` **no** arranca el servidor HTTP; las pruebas de la API se corren por separado con `make test-api` (ver **API REST**).
 
-## API (muestra)
+## API REST
 
-Capa onion: handler HTTP → servicio → puerto. `*db.Queries` implementa los puertos. Solo ejercicios y alumnos.
+Capa onion: handler HTTP → servicio → puerto. `*db.Queries` implementa los puertos. La API cubre todas las entidades del modelo.
 
 Levantar la base y el servidor (en dos terminales, o la base primero):
 
@@ -84,16 +86,66 @@ make run
 |---|---|---|
 | `POST` | `/api/ejercicios` | Crear |
 | `GET` | `/api/ejercicios` | Listar |
-| `GET` | `/api/ejercicios/{id}` | Obtener |
+| `GET` | `/api/ejercicios/{id}` | Obtener (404 si no existe) |
 | `PUT` | `/api/ejercicios/{id}` | Actualizar |
-| `DELETE` | `/api/ejercicios/{id}` | Borrar |
+| `DELETE` | `/api/ejercicios/{id}` | Borrar (204) |
 | `POST` | `/api/alumnos` | Alta usuario+alumno (`CreateAlumno`) |
 | `GET` | `/api/alumnos` | Listar (join con usuario) |
 | `GET` | `/api/alumnos/{id}` | Ficha |
 | `PUT` | `/api/alumnos/{id}` | Plan / vencimiento / rutina |
 | `DELETE` | `/api/alumnos/{id}` | Borrar usuario (cascade al alumno) |
+| `POST` | `/api/profesores` | Alta usuario+profesor (`CreateProfesor`) |
+| `GET` | `/api/profesores` | Listar (join con usuario) |
+| `GET` | `/api/profesores/{id}` | Ficha |
+| `PUT` | `/api/profesores/{id}` | Actualizar especialidad |
+| `DELETE` | `/api/profesores/{id}` | Borrar usuario (cascade al profesor) |
+| `POST` | `/api/rutinas` | Crear |
+| `GET` | `/api/rutinas` | Listar |
+| `GET` | `/api/rutinas/{id}` | Obtener |
+| `PUT` | `/api/rutinas/{id}` | Actualizar |
+| `DELETE` | `/api/rutinas/{id}` | Borrar |
+| `POST` | `/api/rutinas/{id}/ejercicios` | Agregar ejercicio a la rutina |
+| `GET` | `/api/rutinas/{id}/ejercicios` | Listar ejercicios de la rutina |
+| `PUT` | `/api/rutinas/{id}/ejercicios/{ejercicio_id}` | Editar orden/series/reps |
+| `DELETE` | `/api/rutinas/{id}/ejercicios/{ejercicio_id}` | Quitar ejercicio |
+| `POST` | `/api/clases` | Crear |
+| `GET` | `/api/clases` | Listar |
+| `GET` | `/api/clases/{id}` | Obtener |
+| `PUT` | `/api/clases/{id}` | Actualizar |
+| `DELETE` | `/api/clases/{id}` | Borrar |
+| `POST` | `/api/clases/{id}/horarios` | Agregar horario a la clase |
+| `GET` | `/api/clases/{id}/horarios` | Listar horarios de la clase |
+| `GET` | `/api/horarios/{id}` | Obtener horario |
+| `DELETE` | `/api/horarios/{id}` | Borrar horario |
+| `POST` | `/api/horarios/{id}/inscripciones` | Inscribir alumno (valida cupo) |
+| `GET` | `/api/horarios/{id}/inscripciones` | Listar inscriptos |
+| `DELETE` | `/api/horarios/{id}/inscripciones/{alumno_id}` | Dar de baja |
 
-Ejemplos:
+Códigos de estado: `201` al crear, `204` al borrar, `200` al consultar/actualizar,
+`400` datos inválidos o JSON malformado, `404` no encontrado, `409` conflicto
+(duplicado o cupo completo), `500` error interno.
+
+### Prueba automática (requests.hurl)
+
+El archivo `requests.hurl` recorre el CRUD completo de todas las entidades, casos
+de error y los `DELETE`, encadenando los IDs reales que devuelve la API con las
+capacidades nativas de Hurl (`[Captures]` y `[Asserts]`).
+
+La prueba API se ejecuta aparte, con el servidor activo en otra terminal:
+
+```bash
+make up
+make run
+```
+
+En una segunda terminal, ejecutar `make test-api`. Para depurar una petición
+directamente, se puede usar `hurl --test requests.hurl`.
+
+La URL base se define en `requests.hurl` (variable `base_url`, por defecto
+`http://localhost:8080`). Como las variables de `[Options]` tienen la máxima
+prioridad en Hurl, para apuntar a otro host se edita esa línea en el archivo.
+
+### Ejemplos sueltos
 
 ```bash
 curl -s http://localhost:8080/api/ejercicios
@@ -122,7 +174,7 @@ Al terminar: `make down`.
 - Accede a los ejercicios (imágenes/videos)
 - Ver calendario e inscribirse a una clase
 
-En este TP la persistencia y los tests cubren el modelo completo. La API HTTP de muestra cubre ejercicios y alumnos; el resto de entidades sigue accesible solo vía sqlc/tests.
+En este TP la persistencia, los tests y la API cubren el modelo completo (usuario vía alumno/profesor, ejercicio, rutina, rutina_ejercicio, clase, clase_horario e inscripción).
 
 ## Requisitos / versiones
 
@@ -130,32 +182,21 @@ En este TP la persistencia y los tests cubren el modelo completo. La API HTTP de
 - sqlc `v1.31.1`
 - PostgreSQL `15-alpine` (imagen Docker)
 - Docker Compose `3.8`
+- Hurl `8.0.1` (para `make test-api` / `requests.hurl`)
 - `github.com/lib/pq` `v1.12.3`
 
-## ADICIONAL
+## Estructura de capas
 
-Además de la persistencia y los tests del TP, hay una **API HTTP de muestra** para ejercicios y alumnos. No reemplaza `make test`: sirve para ver el mismo `*db.Queries` usado desde un servidor, con handlers y servicios, en lugar de llamarlo solo desde el paquete `testing`.
+- `internal/handler`: capa HTTP. Parsea JSON/URL, llama al servicio y traduce los
+  errores de dominio a códigos de estado (`json.go`). No conoce SQL.
+- `internal/service`: lógica de negocio y validaciones. Define los tipos del
+  dominio (`*_types.go`), los servicios (CRUD) y los **puertos** (`ports.go`).
+- `db/sqlc`: código generado por sqlc (paquete `db`). `*db.Queries` implementa
+  los puertos sin adaptador. `db/sqlc/alumno.go` y `db/sqlc/profesor.go` son
+  archivos escritos a mano para el alta compuesta usuario + alumno/profesor.
 
-La utilidad es fijar el patrón de capas (handler → servicio → puerto; `*db.Queries` implementa el puerto) y comprobar el modelo por HTTP. Ejercicios cubren un CRUD directo. Alumnos cubren el alta compuesta usuario+alumno (`CreateAlumno`) y el borrado por cascade sobre `usuario`. El resto de tablas sigue cubierto por sqlc y por los tests de integración.
+Flujo de una petición: `handler → service → puerto (interface) → *db.Queries → PostgreSQL`.
 
-Cómo probarla (Postgres tiene que estar arriba; `make test` la baja al terminar):
-
-```bash
-make up
-make run
-```
-
-El servidor queda en `http://localhost:8080`. `GET /` sirve `static/`. Las rutas JSON están bajo `/api/ejercicios` y `/api/alumnos` (ver la tabla en **API (muestra)**).
-
-```bash
-curl -s http://localhost:8080/
-curl -s http://localhost:8080/api/ejercicios
-curl -s -X POST http://localhost:8080/api/ejercicios \
-  -H 'Content-Type: application/json' \
-  -d '{"nombre":"sentadilla","descripcion":"barra","grupo_muscular":"piernas"}'
-curl -s -X POST http://localhost:8080/api/alumnos \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"a@example.com","contrasena":"secret123","nombre":"Ana","apellido":"Lopez","fecha_inscripcion":"2026-09-10","tipo_plan":"mensual"}'
-```
-
-Si `make up` falla porque el puerto `5432` ya está ocupado, alcanza con que esa instancia tenga la base `tp2_db` y el schema; `make run` usa la misma cadena que los tests. Al terminar: `make down` (solo si levantaste Compose en este paso).
+Si `make up` falla porque el puerto `5432` ya está ocupado, alcanza con que esa
+instancia tenga la base `tp2_db` y el schema; `make run` usa la misma cadena que
+los tests. Al terminar: `make down` (solo si levantaste Compose en este paso).

@@ -35,12 +35,13 @@ func main() {
 	queries := db.New(dbConn)
 	ejercicios := service.NewEjercicioService(queries)
 	alumnos := service.NewAlumnoService(queries)
+	profesores := service.NewProfesorService(queries)
 	rutinas := service.NewRutinaService(queries)
 	rutinas_ejercicio := service.NewRutinaEjercicioService(queries)
 	clases := service.NewClaseService(queries)
 	clases_horario := service.NewClaseHorarioService(queries)
 	inscripciones := service.NewInscripcionService(queries)
-	router := handler.NewRouter(ejercicios, alumnos, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, "./static")
+	router := handler.NewRouter(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, "./static")
 
 	port := os.Getenv("PORT")
 	if port == "" {

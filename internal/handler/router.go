@@ -6,9 +6,10 @@ import (
 	"PRACTICO_DOS/internal/service"
 )
 
-func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, staticDir string) http.Handler {
+func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, profesores *service.ProfesorService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, staticDir string) http.Handler {
 	ej := NewEjercicioHandler(ejercicios)
 	al := NewAlumnoHandler(alumnos)
+	pr := NewProfesorHandler(profesores)
 	ru := NewRutinaHandler(rutinas)
 	re := NewRutinaEjercicioHandler(rutinas_ejercicio)
 	cl := NewClaseHandler(clases)
@@ -27,6 +28,12 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	mux.HandleFunc("GET /api/alumnos/{id}", al.Get)
 	mux.HandleFunc("PUT /api/alumnos/{id}", al.Update)
 	mux.HandleFunc("DELETE /api/alumnos/{id}", al.Delete)
+
+	mux.HandleFunc("POST /api/profesores", pr.Create)
+	mux.HandleFunc("GET /api/profesores", pr.List)
+	mux.HandleFunc("GET /api/profesores/{id}", pr.Get)
+	mux.HandleFunc("PUT /api/profesores/{id}", pr.Update)
+	mux.HandleFunc("DELETE /api/profesores/{id}", pr.Delete)
 
 	mux.HandleFunc("POST /api/rutinas", ru.Create)
 	mux.HandleFunc("GET /api/rutinas", ru.List)
