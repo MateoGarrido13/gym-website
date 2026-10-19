@@ -21,8 +21,11 @@ run: build
 	@./main
 
 # No usa -v: el volumen postgres_data se conserva (datos + schema ya aplicados).
+# El sleep cubre el reinicio de Postgres después de correr init.sh: --wait
+# puede volver cuando el healthcheck pasa y la base todavía corta conexiones.
 up:
 	@docker compose up -d --wait
+	@sleep 3
 
 # Baja contenedores y deja el volumen intacto.
 down:
@@ -39,14 +42,21 @@ migrate:
 	@docker compose exec -T postgres-db psql -U postgres -d tp2_db -v ON_ERROR_STOP=1 -f /opt/sql/migration/$$(basename $(FILE))
 
 test: build reset
-	@docker compose up -d --wait
+	@make up
 	@go test ./test/... -v -count=1; \
 	status=$$?;  \
 	make reset; \
 	exit $$status
 
-# Prueba la API REST con Hurl. Requiere el servidor levantado en otra terminal
-# (make up && make run) y Hurl instalado (https://hurl.dev).
+# Schema limpio, servidor, requests.hurl y limpieza.
 # La URL base se configura con la variable `base_url` dentro de requests.hurl.
-test-api:
-	@hurl --test requests.hurl
+test-api: build reset
+	@make up
+	@./main & echo $$! > .api.pid
+	@sleep 2
+	@hurl --test requests.hurl; \
+	status=$$?; \
+	kill $$(cat .api.pid) || true; \
+	rm -f .api.pid; \
+	make reset; \
+	exit $$status

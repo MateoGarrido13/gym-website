@@ -6,7 +6,7 @@ Este repositorio corresponde al TP3: una API REST que expone la lógica de negoc
 
 ## Cómo ejecutar
 
-Requisitos: Go, Docker y Docker Compose. El puerto `5432` debe estar libre.
+Requisitos: Go, Docker y Docker Compose. Para `make test-api`, también Hurl. Los puertos `5432` y `8080` deben estar libres.
 
 ```bash
 git clone <url-del-repo>
@@ -131,15 +131,13 @@ El archivo `requests.hurl` recorre el CRUD completo de todas las entidades, caso
 de error y los `DELETE`, encadenando los IDs reales que devuelve la API con las
 capacidades nativas de Hurl (`[Captures]` y `[Asserts]`).
 
-La prueba API se ejecuta aparte, con el servidor activo en otra terminal:
+`make test-api` hace el ciclo completo: sqlc y compilación, baja contenedores y volúmenes, levanta Postgres, arranca el servidor, corre `requests.hurl`, mata el servidor y vuelve a borrar contenedores y volúmenes.
 
 ```bash
-make up
-make run
+make test-api
 ```
 
-En una segunda terminal, ejecutar `make test-api`. Para depurar una petición
-directamente, se puede usar `hurl --test requests.hurl`.
+Para depurar una petición con el servidor ya levantado (`make up` y `make run` en otra terminal), se puede usar `hurl --test requests.hurl`.
 
 La URL base se define en `requests.hurl` (variable `base_url`, por defecto
 `http://localhost:8080`). Como las variables de `[Options]` tienen la máxima

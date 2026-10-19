@@ -29,9 +29,9 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, errorBody{Error: msg})
 }
 
-func readJSON(r *http.Request, dst any) error {
+func readJSON(r *http.Request, dst any) error { //delegar a negocio ,  adicional 1 a1, otro de varios
 	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
+	dec.DisallowUnknownFields() //analizar 
 	if err := dec.Decode(dst); err != nil {
 		return err
 	}

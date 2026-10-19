@@ -12,6 +12,7 @@ main
 *.out
 *.test
 *.prof
+.api.pid
 
 # Configuraciones de IDEs y Editores de texto
 .idea/
