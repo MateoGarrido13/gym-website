@@ -51,6 +51,87 @@ No hay migraciones incrementales: un solo schema al init del contenedor.
 
 `usuario` es la identidad (email, contraseña, nombre, apellido, teléfono, `rol`). `alumno` y `profesor` la especializan 1:1 (`usuario_id` es PK y FK). Borrar un usuario, por `ON DELETE CASCADE`, borra el alumno o profesor asociado.
 
+```mermaid
+erDiagram
+    usuario ||--o| profesor : "especializa"
+    usuario ||--o| alumno : "especializa"
+    profesor ||--o{ rutina : "crea"
+    profesor ||--o{ clase : "dicta"
+    rutina ||--o{ alumno : "asigna"
+    rutina ||--o{ rutina_ejercicio : "compone"
+    ejercicio ||--o{ rutina_ejercicio : "incluye"
+    clase ||--o{ clase_horario : "tiene"
+    clase_horario ||--o{ inscripcion_clase : "recibe"
+    alumno ||--o{ inscripcion_clase : "se inscribe"
+
+    usuario {
+        serial id PK
+        varchar email UK
+        varchar contrasena
+        varchar nombre
+        varchar apellido
+        varchar telefono
+        enum_rol rol
+        timestamptz created_at
+    }
+
+    profesor {
+        int usuario_id PK,FK
+        varchar especialidad
+    }
+
+    alumno {
+        int usuario_id PK,FK
+        date fecha_inscripcion
+        date fecha_vto
+        varchar tipo_plan
+        int rutina_id FK
+    }
+
+    ejercicio {
+        serial id PK
+        varchar nombre
+        text descripcion
+        varchar grupo_muscular
+    }
+
+    rutina {
+        serial id PK
+        varchar nombre
+        int duracion_semanas
+        int profesor_id FK
+    }
+
+    rutina_ejercicio {
+        int rutina_id PK,FK
+        int ejercicio_id PK,FK
+        int orden
+        int series
+        int repeticiones
+        int descanso_segundos
+    }
+
+    clase {
+        serial id PK
+        varchar nombre
+        int max_alumnos
+        int profesor_id FK
+    }
+
+    clase_horario {
+        serial id PK
+        int clase_id FK
+        enum_dia_semana dia_semana
+        time hora_inicio
+    }
+
+    inscripcion_clase {
+        int clase_horario_id PK,FK
+        int alumno_id PK,FK
+        timestamptz fecha_inscripcion
+    }
+```
+
 | Tabla | Qué guarda |
 |---|---|
 | `usuario` | Datos personales y rol (`alumno` / `profesor`) |
