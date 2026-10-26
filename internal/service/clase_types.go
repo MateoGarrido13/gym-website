@@ -17,10 +17,10 @@ type ClaseCreateInput struct {
 	ProfesorID int32  `json:"profesor_id"`
 }
 
-// No incluye profesor_id: la query UpdateClase no lo cambia.
 type ClaseUpdateInput struct {
 	Nombre     string `json:"nombre"`
 	MaxAlumnos int32  `json:"max_alumnos"`
+	ProfesorID int32  `json:"profesor_id"`
 }
 
 func fromDBClase(row db.Clase) Clase {

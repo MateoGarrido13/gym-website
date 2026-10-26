@@ -57,12 +57,14 @@ func TestGetRutina(t *testing.T) {
 
 func TestUpdateRutina(t *testing.T) {
 	profesor := createProfesorDePrueba(t)
+	nuevoProfesor := createProfesorDePrueba(t)
 	creada := createRutinaDePrueba(t, profesor.ID)
 
 	updateParams := db.UpdateRutinaParams{
 		ID:              creada.ID,
 		Nombre:          fmt.Sprintf("actualizada-%d", time.Now().UnixNano()),
 		DuracionSemanas: 12,
+		ProfesorID:      nuevoProfesor.ID,
 	}
 
 	if err := queries.UpdateRutina(ctx, updateParams); err != nil {
@@ -78,6 +80,9 @@ func TestUpdateRutina(t *testing.T) {
 	}
 	if rutina.DuracionSemanas != updateParams.DuracionSemanas {
 		t.Errorf("duracion_semanas = %d, se esperaba %d", rutina.DuracionSemanas, updateParams.DuracionSemanas)
+	}
+	if rutina.ProfesorID != updateParams.ProfesorID {
+		t.Errorf("profesor_id = %d, se esperaba %d", rutina.ProfesorID, updateParams.ProfesorID)
 	}
 }
 

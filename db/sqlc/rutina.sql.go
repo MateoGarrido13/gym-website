@@ -177,18 +177,24 @@ func (q *Queries) ListRutinas(ctx context.Context) ([]Rutina, error) {
 
 const updateRutina = `-- name: UpdateRutina :exec
 UPDATE rutina
-SET nombre = $1, duracion_semanas = $2
-WHERE id = $3
+SET nombre = $1, duracion_semanas = $2, profesor_id = $3
+WHERE id = $4
 `
 
 type UpdateRutinaParams struct {
 	Nombre          string `json:"nombre"`
 	DuracionSemanas int32  `json:"duracion_semanas"`
+	ProfesorID      int32  `json:"profesor_id"`
 	ID              int32  `json:"id"`
 }
 
 func (q *Queries) UpdateRutina(ctx context.Context, arg UpdateRutinaParams) error {
-	_, err := q.db.ExecContext(ctx, updateRutina, arg.Nombre, arg.DuracionSemanas, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateRutina,
+		arg.Nombre,
+		arg.DuracionSemanas,
+		arg.ProfesorID,
+		arg.ID,
+	)
 	return err
 }
 

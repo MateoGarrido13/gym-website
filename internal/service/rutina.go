@@ -54,19 +54,25 @@ func (s *RutinaService) List(ctx context.Context) ([]Rutina, error) {
 }
 
 func (s *RutinaService) Update(ctx context.Context, id int32, in RutinaUpdateInput) (Rutina, error) {
-	if _, err := s.Get(ctx, id); err != nil {
+	current, err := s.Get(ctx, id)
+	if err != nil {
 		return Rutina{}, err
+	}
+	professorID := in.ProfesorID
+	if professorID == 0 {
+		professorID = current.ProfesorID
 	}
 
 	nombre := strings.TrimSpace(in.Nombre)
-	if nombre == "" || in.DuracionSemanas == 0 {
-		return Rutina{}, fmt.Errorf("%w: nombre y duracion_semanas son obligatorios", ErrInvalid)
+	if nombre == "" || in.DuracionSemanas <= 0 || professorID <= 0 {
+		return Rutina{}, fmt.Errorf("%w: nombre, duracion_semanas y profesor_id son obligatorios", ErrInvalid)
 	}
 
-	err := s.store.UpdateRutina(ctx, db.UpdateRutinaParams{
+	err = s.store.UpdateRutina(ctx, db.UpdateRutinaParams{
 		ID:              id,
 		Nombre:          nombre,
 		DuracionSemanas: in.DuracionSemanas,
+		ProfesorID:      professorID,
 	})
 	if err != nil {
 		return Rutina{}, err

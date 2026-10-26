@@ -1,0 +1,39 @@
+package views
+
+templ Layout(title string, active string) {
+	<!doctype html>
+	<html lang="es">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta name="theme-color" content="#111b18"/>
+			<title>{ title + " | Gym Web" }</title>
+			<link rel="stylesheet" href="/static/styles.css"/>
+		</head>
+		<body>
+			<div class="app-shell">
+				<aside class="sidebar">
+					<a class="brand" href="/" aria-label="Gym Web, inicio">
+						<span class="brand-mark">GW</span>
+						<span>Gym Web</span>
+					</a>
+					<nav class="navigation" aria-label="Navegación principal">
+						<a class={ navClass(active, "alumnos") } href="/">Alumnos</a>
+						<a class={ navClass(active, "profesores") } href="/profesores">Profesores</a>
+						<a class={ navClass(active, "ejercicios") } href="/ejercicios">Ejercicios</a>
+						<a class={ navClass(active, "rutinas") } href="/rutinas">Rutinas</a>
+						<a class={ navClass(active, "clases") } href="/clases">Clases</a>
+					</nav>
+				</aside>
+				<main class="workspace">
+					<header class="topbar">
+						<h1>{ title }</h1>
+					</header>
+					<div class="page-content">
+						{ children... }
+					</div>
+				</main>
+			</div>
+		</body>
+	</html>
+}

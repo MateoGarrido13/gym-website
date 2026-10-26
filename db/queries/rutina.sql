@@ -16,8 +16,8 @@ FROM rutina;
 
 -- name: UpdateRutina :exec
 UPDATE rutina
-SET nombre = $1, duracion_semanas = $2
-WHERE id = $3;
+SET nombre = $1, duracion_semanas = $2, profesor_id = $3
+WHERE id = $4;
 
 -- name: DeleteRutina :exec
 DELETE FROM rutina

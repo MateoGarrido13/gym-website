@@ -20,6 +20,7 @@ type RutinaCreateInput struct {
 type RutinaUpdateInput struct {
 	Nombre          string `json:"nombre"`
 	DuracionSemanas int32  `json:"duracion_semanas"`
+	ProfesorID      int32  `json:"profesor_id"`
 }
 
 func fromDBRutina(row db.Rutina) Rutina {

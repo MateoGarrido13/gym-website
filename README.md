@@ -161,7 +161,58 @@ make up
 make run
 ```
 
-`GET /` sigue sirviendo `static/`. JSON en `/api/...`:
+Las páginas de gestión se renderizan del lado del servidor con `templ`: `/`,
+`/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y
+formularios de alta. Los formularios usan POST tradicional y el servidor redirige
+con HTTP 303 (Post/Redirect/Get). Las cinco tablas permiten editar y borrar filas:
+alumnos permite cambiar plan, vencimiento y rutina asignada; profesores,
+especialidad; ejercicios, sus datos del catálogo; y rutinas/clases, sus atributos y
+profesor responsable. Rutinas y clases requieren seleccionar un profesor existente;
+un ejercicio que ya forma parte de una rutina no se puede borrar. Las vistas fuente
+están en `views/*.templ` y el CSS se sirve desde `static/`.
+
+El formulario de rutinas permite seleccionar varios ejercicios del catálogo. Al
+editar una rutina, los ejercicios asociados aparecen preseleccionados; guardar los
+cambios agrega los nuevos seleccionados y quita los desmarcados.
+
+El nombre visible de la aplicación es **Gym Web**.
+
+### Organización de los handlers web
+
+La separación entre los handlers de alumnos/profesores y los del resto de los
+catálogos es intencional; no indica que falten operaciones. Alumnos y profesores
+representan altas de personas: ambos crean primero una identidad de usuario
+(nombre, apellido, correo y contraseña) y luego sus datos específicos. Por eso
+tienen handlers de listado y creación propios en `internal/web/handler.go`.
+
+Ejercicios, rutinas y clases no crean usuarios. Sus rutas delegan en operaciones
+comunes de catálogo (`showCatalog`, `editCatalog`, `saveCatalog` y
+`deleteCatalog`), implementadas en `internal/web/catalog_pages.go` y
+`internal/web/catalog_forms.go`. Los métodos por entidad de `catalog.go` son
+adaptadores del router: eligen el catálogo y si la operación es alta, edición o
+baja.
+
+`renderFormError` está limitado a las altas de alumnos y profesores porque solo
+lo invocan `CreateAlumno` y `CreateProfesor`. Si esos formularios fallan, vuelve
+a cargar la tabla correspondiente y conserva los campos enviados para que la
+persona pueda corregirlos; la contraseña no se conserva. Los errores de alta,
+edición o baja de ejercicios, rutinas y clases —y los de edición/baja de alumnos
+y profesores— siguen otro recorrido: `saveCatalog` o `deleteCatalog` llama a
+`showCatalog`, que reconstruye la página con sus valores y el mensaje de error.
+
+Esta distinción simplifica el flujo actual al mantener juntas las altas de
+identidad y reutilizar el mismo flujo para los catálogos restantes. No es una
+limitación del servidor ni un requisito de Go: podría refactorizarse a un flujo
+único, pero habría que conservar las diferencias de campos y servicios para no
+perder validación ni los valores del formulario al mostrar errores.
+
+El flujo de edición y baja es server-side: editar abre una página GET y
+guarda con POST; eliminar también se solicita con POST porque los formularios HTML
+nativos solo soportan GET y POST. No se usa HTMX ni se modifica el DOM desde
+JavaScript para estas operaciones.
+
+La API JSON de TP3 se conserva en `/api/...` para clientes existentes y para sus
+pruebas; la interfaz web ya no la consume desde JavaScript:
 
 | Método | Ruta | Qué hace |
 |---|---|---|
@@ -223,6 +274,26 @@ Para depurar una petición con el servidor ya levantado (`make up` y `make run` 
 La URL base se define en `requests.hurl` (variable `base_url`, por defecto
 `http://localhost:8080`). Como las variables de `[Options]` tienen la máxima
 prioridad en Hurl, para apuntar a otro host se edita esa línea en el archivo.
+
+### Interfaz web (SSR con templ)
+
+La interfaz de administración se genera en el servidor con componentes `templ`.
+`make build` ejecuta sqlc, genera las vistas con `templ generate` y compila el
+servidor. Para abrirla localmente en `http://localhost:8080`:
+
+```bash
+make up
+make run
+```
+
+El listado y el formulario se componen en `views/layout.templ`,
+`views/entity_list.templ` y `views/entity_form.templ`. La interfaz permite
+registrar y listar alumnos, profesores, ejercicios, rutinas y clases; también
+editar y eliminar sus registros. Los formularios usan el patrón
+Post/Redirect/Get y las páginas se vuelven a renderizar en el servidor. No hay
+JavaScript de cliente en estas páginas. La base PostgreSQL debe estar activa.
+La integración sin recarga mediante HTMX corresponde al TP6 y se deja para una
+etapa posterior.
 
 ### Ejemplos sueltos
 

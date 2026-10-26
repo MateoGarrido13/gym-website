@@ -16,8 +16,8 @@ FROM clase;
 
 -- name: UpdateClase :exec
 UPDATE clase
-SET nombre = $1, max_alumnos = $2
-WHERE id = $3;
+SET nombre = $1, max_alumnos = $2, profesor_id = $3
+WHERE id = $4;
 
 -- name: DeleteClase :exec
 DELETE FROM clase

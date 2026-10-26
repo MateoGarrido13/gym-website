@@ -54,19 +54,25 @@ func (s *ClaseService) List(ctx context.Context) ([]Clase, error) {
 }
 
 func (s *ClaseService) Update(ctx context.Context, id int32, in ClaseUpdateInput) (Clase, error) {
-	if _, err := s.Get(ctx, id); err != nil {
+	current, err := s.Get(ctx, id)
+	if err != nil {
 		return Clase{}, err
+	}
+	professorID := in.ProfesorID
+	if professorID == 0 {
+		professorID = current.ProfesorID
 	}
 
 	nombre := strings.TrimSpace(in.Nombre)
-	if nombre == "" || in.MaxAlumnos <= 0 {
-		return Clase{}, fmt.Errorf("%w: nombre y max_alumnos son obligatorios", ErrInvalid)
+	if nombre == "" || in.MaxAlumnos <= 0 || professorID <= 0 {
+		return Clase{}, fmt.Errorf("%w: nombre, max_alumnos y profesor_id son obligatorios", ErrInvalid)
 	}
 
-	err := s.store.UpdateClase(ctx, db.UpdateClaseParams{
+	err = s.store.UpdateClase(ctx, db.UpdateClaseParams{
 		ID:         id,
 		Nombre:     nombre,
 		MaxAlumnos: in.MaxAlumnos,
+		ProfesorID: professorID,
 	})
 	if err != nil {
 		return Clase{}, err

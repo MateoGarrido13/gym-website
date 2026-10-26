@@ -1,0 +1,47 @@
+package views
+
+templ EntityList(data PageData) {
+	<section class="panel list-panel server-list-panel">
+		<div class="server-panel-heading">
+			<div>
+				<p class="eyebrow">REGISTROS</p>
+				<h3>Registros <span class="result-count">{ len(data.Entities) }</span></h3>
+			</div>
+		</div>
+		<div class="table-wrap">
+			<table>
+				<thead>
+					<tr>
+						for _, header := range data.Headers {
+							<th scope="col">{ header }</th>
+						}
+						if data.ShowActions {
+							<th scope="col">ACCIONES</th>
+						}
+					</tr>
+				</thead>
+				<tbody>
+					if len(data.Entities) == 0 {
+						<tr><td colspan={ intString(len(data.Headers) + boolInt(data.ShowActions)) } class="table-empty">Todavía no hay registros. Usa el formulario para agregar el primero.</td></tr>
+					} else {
+						for _, entity := range data.Entities {
+							<tr>
+								for _, value := range entity.Values {
+									<td>{ value }</td>
+								}
+								if data.ShowActions {
+									<td class="row-actions">
+										<a class="table-action" href={ entity.EditURL }>Editar</a>
+										<form method="post" action={ entity.DeleteURL }>
+											<button class="table-action table-action-danger" type="submit">Eliminar</button>
+										</form>
+									</td>
+								}
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+	</section>
+}

@@ -1,7 +1,9 @@
 GOBIN := $(shell go env GOPATH)/bin
 SQLC := $(GOBIN)/sqlc
+TEMPL := $(GOBIN)/templ
+TEMPL_VERSION := v0.3.1070
 
-.PHONY: test test-api sqlc build up down reset run migrate
+.PHONY: test test-api sqlc templ generate-templ build up down reset run migrate
 
 #PATH REAL, SIN PHONY para que se chequee cada vez que se ejecuta el make
 $(SQLC):
@@ -12,8 +14,17 @@ $(SQLC):
 sqlc: $(SQLC)
 	@$(SQLC) generate
 
-# Compila el binario del servidor (los tests de Go no lo usan; test sí lo compila).
-build: sqlc
+# Genera las vistas server-side de templ.
+$(TEMPL):
+	@go install github.com/a-h/templ/cmd/templ@$(TEMPL_VERSION)
+
+templ: $(TEMPL)
+	@$(TEMPL) generate
+
+generate-templ: templ
+
+# Compila el servidor y genera el código necesario antes de compilar las vistas.
+build: sqlc templ
 	@go build -o main main.go
 
 # Postgres debe estar arriba (make up). No baja contenedores al salir.

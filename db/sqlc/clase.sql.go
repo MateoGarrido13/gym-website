@@ -185,17 +185,23 @@ func (q *Queries) ListHorariosDeClase(ctx context.Context, claseID int32) ([]Cla
 
 const updateClase = `-- name: UpdateClase :exec
 UPDATE clase
-SET nombre = $1, max_alumnos = $2
-WHERE id = $3
+SET nombre = $1, max_alumnos = $2, profesor_id = $3
+WHERE id = $4
 `
 
 type UpdateClaseParams struct {
 	Nombre     string `json:"nombre"`
 	MaxAlumnos int32  `json:"max_alumnos"`
+	ProfesorID int32  `json:"profesor_id"`
 	ID         int32  `json:"id"`
 }
 
 func (q *Queries) UpdateClase(ctx context.Context, arg UpdateClaseParams) error {
-	_, err := q.db.ExecContext(ctx, updateClase, arg.Nombre, arg.MaxAlumnos, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateClase,
+		arg.Nombre,
+		arg.MaxAlumnos,
+		arg.ProfesorID,
+		arg.ID,
+	)
 	return err
 }

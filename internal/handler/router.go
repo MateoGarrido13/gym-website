@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"PRACTICO_DOS/internal/service"
+	"PRACTICO_DOS/internal/web"
 )
 
 func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, profesores *service.ProfesorService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, staticDir string) http.Handler {
@@ -15,6 +16,7 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	cl := NewClaseHandler(clases)
 	ch := NewClaseHorarioHandler(clases_horario)
 	ins := NewInscripcionHandler(inscripciones)
+	pages := web.NewHandler(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/ejercicios", ej.Create)
@@ -61,6 +63,31 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	mux.HandleFunc("GET /api/horarios/{id}/inscripciones", ins.List)
 	mux.HandleFunc("DELETE /api/horarios/{id}/inscripciones/{alumno_id}", ins.Delete)
 
-	mux.Handle("/", http.FileServer(http.Dir(staticDir)))
+	mux.HandleFunc("GET /", pages.Alumnos)
+	mux.HandleFunc("GET /profesores", pages.Profesores)
+	mux.HandleFunc("POST /alumnos", pages.CreateAlumno)
+	mux.HandleFunc("POST /profesores", pages.CreateProfesor)
+	mux.HandleFunc("GET /alumnos/{id}/editar", pages.EditAlumno)
+	mux.HandleFunc("POST /alumnos/{id}", pages.UpdateAlumno)
+	mux.HandleFunc("POST /alumnos/{id}/eliminar", pages.DeleteAlumno)
+	mux.HandleFunc("GET /profesores/{id}/editar", pages.EditProfesor)
+	mux.HandleFunc("POST /profesores/{id}", pages.UpdateProfesor)
+	mux.HandleFunc("POST /profesores/{id}/eliminar", pages.DeleteProfesor)
+	mux.HandleFunc("GET /ejercicios", pages.Ejercicios)
+	mux.HandleFunc("POST /ejercicios", pages.CreateEjercicio)
+	mux.HandleFunc("GET /ejercicios/{id}/editar", pages.EditEjercicio)
+	mux.HandleFunc("POST /ejercicios/{id}", pages.UpdateEjercicio)
+	mux.HandleFunc("POST /ejercicios/{id}/eliminar", pages.DeleteEjercicio)
+	mux.HandleFunc("GET /rutinas", pages.Rutinas)
+	mux.HandleFunc("POST /rutinas", pages.CreateRutina)
+	mux.HandleFunc("GET /rutinas/{id}/editar", pages.EditRutina)
+	mux.HandleFunc("POST /rutinas/{id}", pages.UpdateRutina)
+	mux.HandleFunc("POST /rutinas/{id}/eliminar", pages.DeleteRutina)
+	mux.HandleFunc("GET /clases", pages.Clases)
+	mux.HandleFunc("POST /clases", pages.CreateClase)
+	mux.HandleFunc("GET /clases/{id}/editar", pages.EditClase)
+	mux.HandleFunc("POST /clases/{id}", pages.UpdateClase)
+	mux.HandleFunc("POST /clases/{id}/eliminar", pages.DeleteClase)
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 	return mux
 }

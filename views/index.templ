@@ -1,0 +1,10 @@
+package views
+
+templ IndexPage(data PageData) {
+	@Layout(data.Title, data.Active) {
+		<div class="server-page-grid">
+			@EntityForm(data)
+			@EntityList(data)
+		</div>
+	}
+}

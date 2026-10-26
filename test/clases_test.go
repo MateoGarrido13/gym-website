@@ -54,12 +54,14 @@ func TestGetClase(t *testing.T) {
 
 func TestUpdateClase(t *testing.T) {
 	profesor := createProfesorDePrueba(t)
+	nuevoProfesor := createProfesorDePrueba(t)
 	creada := createClaseDePrueba(t, profesor.ID)
 
 	updateParams := db.UpdateClaseParams{
 		ID:         creada.ID,
 		Nombre:     fmt.Sprintf("pilates-%d", time.Now().UnixNano()),
 		MaxAlumnos: 8,
+		ProfesorID: nuevoProfesor.ID,
 	}
 
 	if err := queries.UpdateClase(ctx, updateParams); err != nil {
@@ -75,6 +77,9 @@ func TestUpdateClase(t *testing.T) {
 	}
 	if clase.MaxAlumnos != updateParams.MaxAlumnos {
 		t.Errorf("max_alumnos = %d, se esperaba %d", clase.MaxAlumnos, updateParams.MaxAlumnos)
+	}
+	if clase.ProfesorID != updateParams.ProfesorID {
+		t.Errorf("profesor_id = %d, se esperaba %d", clase.ProfesorID, updateParams.ProfesorID)
 	}
 }
 
