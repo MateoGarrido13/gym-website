@@ -64,7 +64,11 @@ func toNullInt32(v *int32) sql.NullInt32 {
 }
 
 func parseDate(s string) (time.Time, error) {
-	return time.Parse(time.DateOnly, strings.TrimSpace(s))
+	s = strings.TrimSpace(s)
+	if t, err := time.Parse(time.DateOnly, s); err == nil {
+		return t, nil
+	}
+	return time.Parse("02-01-2006", s)
 }
 
 func toNullDate(v *string) (sql.NullTime, error) {
