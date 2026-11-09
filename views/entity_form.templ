@@ -65,11 +65,11 @@ templ EntityForm(data PageData) {
 					</label>
 					if data.Kind == "rutinas" {
 						<fieldset class="exercise-picker field-wide">
-							<legend>Ejercicios de la rutina</legend>
+							<legend>Ejercicios de la rutina <b class="required-mark">*</b></legend>
 							if len(data.ExerciseOptions) == 0 {
 								<p class="field-hint">Todavía no hay ejercicios. Primero agrega registros en la sección Ejercicios.</p>
 							} else {
-								<p class="field-hint">Selecciona los ejercicios de esta rutina. Los nuevos se agregan al final de la lista.</p>
+								<p class="field-hint">Selecciona al menos un ejercicio. Los nuevos se agregan al final de la lista.</p>
 								<div class="exercise-options">
 									for _, option := range data.ExerciseOptions {
 										<label class="exercise-option">

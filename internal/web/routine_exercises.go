@@ -44,6 +44,9 @@ func (h *Handler) validateRoutineExerciseIDs(r *http.Request, values []string) (
 		selected = append(selected, id)
 		seen[id] = true
 	}
+	if len(selected) == 0 {
+		return nil, errors.New("No se seleccionaron ejercicios. Por favor, selecciona al menos un ejercicio.")
+	}
 	return selected, nil
 }
 

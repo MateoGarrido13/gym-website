@@ -290,7 +290,7 @@ func EntityForm(data PageData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if data.Kind == "rutinas" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<fieldset class=\"exercise-picker field-wide\"><legend>Ejercicios de la rutina</legend> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<fieldset class=\"exercise-picker field-wide\"><legend>Ejercicios de la rutina <b class=\"required-mark\">*</b></legend> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -300,7 +300,7 @@ func EntityForm(data PageData) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"field-hint\">Selecciona los ejercicios de esta rutina. Los nuevos se agregan al final de la lista.</p><div class=\"exercise-options\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"field-hint\">Selecciona al menos un ejercicio. Los nuevos se agregan al final de la lista.</p><div class=\"exercise-options\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

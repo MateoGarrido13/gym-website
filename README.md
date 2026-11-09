@@ -8,23 +8,26 @@ Este repositorio corresponde al TP3: una API REST que expone la lógica de negoc
 
 Requisitos: Go, Docker y Docker Compose. Para `make test-api`, también Hurl. Los puertos `5432` y `8080` deben estar libres.
 
+Después de clonar, este comando prepara el proyecto, levanta la base y ejecuta la aplicación en `http://localhost:8080`:
+
 ```bash
 git clone <url-del-repo>
 cd <nombre-del-repo>
 git checkout tp3
-make test
+make run-app
 ```
 
-`make test` ejecuta únicamente los tests de integración de Go (`go test ./test/...`). No levanta el servidor ni ejecuta las pruebas de la API (`make test-api`).
+`make run-app` hace, en orden:
 
-`make test` hace, en orden:
+1. Instala sqlc y templ si no están, genera `db/sqlc/` y las vistas con `templ generate`, y compila `main.go`
+2. Borra contenedores y volúmenes previos
+3. Levanta Postgres y espera a que acepte conexiones (healthcheck y una espera adicional)
+4. Ejecuta la aplicación
+5. Al salir el proceso, también con Ctrl+C, borra contenedores y volúmenes
 
-1. Instala sqlc (si hace falta) y genera el código en `db/sqlc/`
-2. Compila `main.go`
-3. Baja contenedores y volúmenes previos
-4. Levanta Postgres y espera a que esté listo (healthcheck)
-5. Corre los tests (`go test ./test/...`)
-6. Baja contenedores y volúmenes
+Hacen falta Go, Docker y Docker Compose, con los puertos `5432` y `8080` libres. Si el `5432` está ocupado, hay que liberarlo: `make run-app` no usa un Postgres ajeno. Para cortar el servidor, Ctrl+C en esa terminal.
+
+ `make test` ejecuta los tests de integración de Go. `make test-api` prueba la API y requiere Hurl.
 
 ## Persistencia
 
@@ -154,12 +157,7 @@ Paquete `testing` en `test/`. Prueban la persistencia contra la base real: usuar
 
 Capa onion: handler HTTP → servicio → puerto. `*db.Queries` implementa los puertos. La API cubre todas las entidades del modelo.
 
-Levantar la base y el servidor (en dos terminales, o la base primero):
-
-```bash
-make up
-make run
-```
+La aplicación se abre con `make run-app`, descrito en «Cómo ejecutar», y queda en `http://localhost:8080`.
 
 Las páginas de gestión se renderizan del lado del servidor con `templ`: `/`,
 `/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y
@@ -279,12 +277,7 @@ prioridad en Hurl, para apuntar a otro host se edita esa línea en el archivo.
 
 La interfaz de administración se genera en el servidor con componentes `templ`.
 `make build` ejecuta sqlc, genera las vistas con `templ generate` y compila el
-servidor. Para abrirla localmente en `http://localhost:8080`:
-
-```bash
-make up
-make run
-```
+servidor. La aplicación se abre con `make run-app`, descrito en «Cómo ejecutar», y queda en `http://localhost:8080`.
 
 El listado y el formulario se componen en `views/layout.templ`,
 `views/entity_list.templ` y `views/entity_form.templ`. La interfaz permite
@@ -307,7 +300,7 @@ curl -s -X POST http://localhost:8080/api/alumnos \
   -d '{"email":"a@example.com","contrasena":"secret123","nombre":"Ana","apellido":"Lopez","fecha_inscripcion":"2026-09-10","tipo_plan":"mensual"}'
 ```
 
-Al terminar: `make down`.
+Esos `curl` pegan al servidor que dejó `make run-app`; al cortarlo se borran contenedores y volúmenes.
 
 ## Funcionalidades previstas del sistema
 
@@ -347,6 +340,4 @@ En este TP la persistencia, los tests y la API cubren el modelo completo (usuari
 
 Flujo de una petición: `handler → service → puerto (interface) → *db.Queries → PostgreSQL`.
 
-Si `make up` falla porque el puerto `5432` ya está ocupado, alcanza con que esa
-instancia tenga la base `tp2_db` y el schema; `make run` usa la misma cadena que
-los tests. Al terminar: `make down` (solo si levantaste Compose en este paso).
+Si `make run-app` no puede publicar el puerto `5432`, ese puerto está ocupado y hay que liberarlo antes de volver a ejecutarlo.

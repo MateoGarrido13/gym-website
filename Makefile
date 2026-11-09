@@ -3,7 +3,7 @@ SQLC := $(GOBIN)/sqlc
 TEMPL := $(GOBIN)/templ
 TEMPL_VERSION := v0.3.1100
 
-.PHONY: test test-api sqlc templ generate-templ build up down reset run migrate
+.PHONY: test test-api sqlc templ generate-templ build up down reset run migrate run-app
 
 #PATH REAL, SIN PHONY para que se chequee cada vez que se ejecuta el make
 $(SQLC):
@@ -72,3 +72,9 @@ test-api: build reset
 	rm -f .api.pid; \
 	make reset; \
 	exit $$status
+
+# sqlc, templ y compilación; borra contenedores y volúmenes; levanta Postgres
+# y espera la base; ejecuta la app; al salir borra contenedores y volúmenes.
+run-app: build
+	@trap '$(MAKE) reset' EXIT INT TERM; \
+	$(MAKE) reset && $(MAKE) up && ./main

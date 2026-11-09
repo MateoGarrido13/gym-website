@@ -26,6 +26,9 @@ func (s *EjercicioService) Create(ctx context.Context, in EjercicioInput) (Ejerc
 	if in.GrupoMuscular == nil || strings.TrimSpace(*in.GrupoMuscular) == "" {
 		return Ejercicio{}, fmt.Errorf("%w: grupo muscular es obligatorio", ErrInvalid)
 	}
+	if err := s.ensureUniqueNombreGrupo(ctx, nombre, strings.TrimSpace(*in.GrupoMuscular), 0); err != nil {
+		return Ejercicio{}, err
+	}
 
 	row, err := s.store.CreateEjercicio(ctx, db.CreateEjercicioParams{
 		Nombre:        nombre,
@@ -70,6 +73,9 @@ func (s *EjercicioService) Update(ctx context.Context, id int32, in EjercicioInp
 	if in.GrupoMuscular == nil || strings.TrimSpace(*in.GrupoMuscular) == "" {
 		return Ejercicio{}, fmt.Errorf("%w: grupo muscular es obligatorio", ErrInvalid)
 	}
+	if err := s.ensureUniqueNombreGrupo(ctx, nombre, strings.TrimSpace(*in.GrupoMuscular), id); err != nil {
+		return Ejercicio{}, err
+	}
 
 	err := s.store.UpdateEjercicio(ctx, db.UpdateEjercicioParams{
 		ID:            id,
@@ -81,6 +87,24 @@ func (s *EjercicioService) Update(ctx context.Context, id int32, in EjercicioInp
 		return Ejercicio{}, err
 	}
 	return s.Get(ctx, id)
+}
+
+func (s *EjercicioService) ensureUniqueNombreGrupo(ctx context.Context, nombre, grupo string, ignoreID int32) error {
+	rows, err := s.List(ctx)
+	if err != nil {
+		return err
+	}
+	for _, row := range rows {
+		if row.ID == ignoreID || row.GrupoMuscular == nil {
+			continue
+		}
+		sameName := strings.EqualFold(nombre, strings.TrimSpace(row.Nombre))
+		sameGroup := strings.EqualFold(grupo, strings.TrimSpace(*row.GrupoMuscular))
+		if sameName && sameGroup {
+			return fmt.Errorf("%w: ya existe un ejercicio con el mismo nombre y grupo muscular", ErrInvalid)
+		}
+	}
+	return nil
 }
 
 func (s *EjercicioService) Delete(ctx context.Context, id int32) error {
