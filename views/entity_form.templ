@@ -24,8 +24,8 @@ templ EntityForm(data PageData) {
 						<input type="text" name="nombre" value={ data.FormValues.Nombre } required/>
 					</label>
 					<label class="field">
-						<span>Grupo muscular</span>
-						<input type="text" name="grupo_muscular" value={ data.FormValues.GrupoMuscular } placeholder="Ej. piernas, espalda"/>
+						<span>Grupo muscular <b class="required-mark">*</b></span>
+						<input type="text" name="grupo_muscular" value={ data.FormValues.GrupoMuscular } placeholder="Ej. piernas, espalda" required/>
 					</label>
 					<label class="field field-wide">
 						<span>Descripción</span>
@@ -56,7 +56,7 @@ templ EntityForm(data PageData) {
 									<option value={ stringID(option.ID) } selected>{ option.Label }</option>
 								} else {
 									<option value={ stringID(option.ID) }>{ option.Label }</option>
-								}
+								} 
 							}
 						</select>
 						if len(data.Options) == 0 {

@@ -6,7 +6,7 @@ import (
 	"PRACTICO_DOS/internal/service"
 	"PRACTICO_DOS/internal/web"
 )
-
+//hay endpoints que ya no se consultan por el frontend, pero seran útiles para demos con curl/ postman
 func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, profesores *service.ProfesorService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, staticDir string) http.Handler {
 	ej := NewEjercicioHandler(ejercicios)
 	al := NewAlumnoHandler(alumnos)

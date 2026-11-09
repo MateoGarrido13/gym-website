@@ -122,7 +122,7 @@ func (h *Handler) CreateAlumno(w http.ResponseWriter, r *http.Request) {
 		h.renderFormError(w, r, "alumnos", values, message, status)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther) // redirigimos a la pagina ppal
 }
 
 func (h *Handler) CreateProfesor(w http.ResponseWriter, r *http.Request) {

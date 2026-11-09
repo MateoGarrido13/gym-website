@@ -1,7 +1,7 @@
 GOBIN := $(shell go env GOPATH)/bin
 SQLC := $(GOBIN)/sqlc
 TEMPL := $(GOBIN)/templ
-TEMPL_VERSION := v0.3.1070
+TEMPL_VERSION := v0.3.1100
 
 .PHONY: test test-api sqlc templ generate-templ build up down reset run migrate
 
@@ -24,6 +24,7 @@ templ: $(TEMPL)
 generate-templ: templ
 
 # Compila el servidor y genera el código necesario antes de compilar las vistas.
+# sqlc -> templ generate ->go build.
 build: sqlc templ
 	@go build -o main main.go
 

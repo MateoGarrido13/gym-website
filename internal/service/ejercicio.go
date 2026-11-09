@@ -23,6 +23,9 @@ func (s *EjercicioService) Create(ctx context.Context, in EjercicioInput) (Ejerc
 	if nombre == "" {
 		return Ejercicio{}, fmt.Errorf("%w: nombre es obligatorio", ErrInvalid)
 	}
+	if in.GrupoMuscular == nil || strings.TrimSpace(*in.GrupoMuscular) == "" {
+		return Ejercicio{}, fmt.Errorf("%w: grupo muscular es obligatorio", ErrInvalid)
+	}
 
 	row, err := s.store.CreateEjercicio(ctx, db.CreateEjercicioParams{
 		Nombre:        nombre,
@@ -63,6 +66,9 @@ func (s *EjercicioService) Update(ctx context.Context, id int32, in EjercicioInp
 	nombre := strings.TrimSpace(in.Nombre)
 	if nombre == "" {
 		return Ejercicio{}, fmt.Errorf("%w: nombre es obligatorio", ErrInvalid)
+	}
+	if in.GrupoMuscular == nil || strings.TrimSpace(*in.GrupoMuscular) == "" {
+		return Ejercicio{}, fmt.Errorf("%w: grupo muscular es obligatorio", ErrInvalid)
 	}
 
 	err := s.store.UpdateEjercicio(ctx, db.UpdateEjercicioParams{
