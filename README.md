@@ -2,7 +2,7 @@
 
 Página web para gimnasios. El objetivo es digitalizar las rutinas, agilizar su actualización y canalizar la inscripción a clases e información en la aplicación. A su vez, mejorar la cercanía con el cliente y su experiencia.
 
-Este repositorio corresponde al TP3: una API REST que expone la lógica de negocio sobre la persistencia en PostgreSQL generada con sqlc. Incluye además los tests de integración del TP2.
+Esta rama (`tp5`) expone una API REST y páginas HTML renderizadas en el servidor con templ. La lógica de negocio persiste en PostgreSQL mediante sqlc. Incluye los tests de integración y `requests.hurl`.
 
 ## Cómo ejecutar
 
@@ -13,7 +13,7 @@ Después de clonar, este comando prepara el proyecto, levanta la base y ejecuta 
 ```bash
 git clone <url-del-repo>
 cd <nombre-del-repo>
-git checkout tp3
+git checkout tp5
 make run-app
 ```
 
@@ -48,11 +48,15 @@ Los tests se conectan con el driver `github.com/lib/pq` usando:
 
 `main.go` abre el mismo pool (o `DATABASE_URL` si está definida), hace `Ping` y pasa `*db.Queries` a los servicios. Si Postgres no está arriba, la app no arranca.
 
-No hay migraciones incrementales: un solo schema al init del contenedor.
+`make run-app`, `make test` y `make test-api` borran el volumen y dejan que `init.sh` aplique el schema completo. `make up` y `make down` conservan `postgres_data`. Para aplicar un archivo nuevo sobre esa base: `make migrate FILE=db/migration/XXXX_nombre.up.sql`.
 
 ### Modelo
 
-`usuario` es la identidad (email, contraseña, nombre, apellido, teléfono, `rol`). `alumno` y `profesor` la especializan 1:1 (`usuario_id` es PK y FK). Borrar un usuario, por `ON DELETE CASCADE`, borra el alumno o profesor asociado.
+`usuario` es la identidad (email, contraseña, nombre, apellido, teléfono, `rol`). `alumno` y `profesor` la especializan 1:1 (`usuario_id` es PK y FK).
+
+`ON DELETE CASCADE`: `usuario` borra su `alumno` o `profesor`; `rutina` borra sus filas de `rutina_ejercicio`; `clase` borra sus `clase_horario` y esas filas borran `inscripcion_clase`; `alumno` borra sus inscripciones.
+
+Sin cascade, el `DELETE` del padre falla si hay hijos: un `ejercicio` que está en `rutina_ejercicio`, una `rutina` referenciada por `alumno.rutina_id`, y un `profesor` referenciado por `rutina.profesor_id` o `clase.profesor_id`. En la API JSON esa falla es `400`; en los formularios, `409`.
 
 ```mermaid
 erDiagram
@@ -60,7 +64,7 @@ erDiagram
     usuario ||--o| alumno : "especializa"
     profesor ||--o{ rutina : "crea"
     profesor ||--o{ clase : "dicta"
-    rutina ||--o{ alumno : "asigna"
+    rutina |o--o{ alumno : "asigna"
     rutina ||--o{ rutina_ejercicio : "compone"
     ejercicio ||--o{ rutina_ejercicio : "incluye"
     clase ||--o{ clase_horario : "tiene"
@@ -147,11 +151,11 @@ erDiagram
 | `clase_horario` | Día de la semana y hora |
 | `inscripcion_clase` | Alumno inscripto a un horario |
 
-Consultas cubiertas: CRUD de usuario, ejercicio, profesor, rutina y clase; alta/listado/update de alumno (join con usuario); inscripciones; joins (ejercicios de una rutina, clases de un profesor, profesores de un día).
+Consultas en `db/queries/`: alta, lectura por id, actualización y baja de `usuario` (sin listado); CRUD de ejercicio, rutina y clase; alta, ficha, listado y actualización de profesor y de alumno. La baja de alumno y de profesor es `DeleteUsuario`. Horarios e inscripciones tienen alta, listado y baja. Los joins de ejercicios de una rutina, clases de un profesor y profesores de un día están en `db/queries/multitabla.sql` y en `test/`; solo el de ejercicios de una rutina tiene ruta HTTP (`GET /api/rutinas/{id}/ejercicios`).
 
 ## Tests
 
-Paquete `testing` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. Cada `make test` deja la DB en un estado fresco. `make test` **no** arranca el servidor HTTP; las pruebas de la API se corren por separado con `make test-api` (ver **API REST**).
+Paquete `test` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. `make test` levanta un volumen nuevo y, al terminar, borra contenedores y volúmenes. **No** arranca el servidor HTTP; las pruebas de la API se corren por separado con `make test-api` (ver **API REST**).
 
 ## API REST
 
@@ -159,14 +163,42 @@ Capa onion: handler HTTP → servicio → puerto. `*db.Queries` implementa los p
 
 La aplicación se abre con `make run-app`, descrito en «Cómo ejecutar», y queda en `http://localhost:8080`.
 
-Las páginas de gestión se renderizan del lado del servidor con `templ`: `/`,
-`/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y
-formularios de alta. Los formularios usan POST tradicional y el servidor redirige
-con HTTP 303 (Post/Redirect/Get). Las cinco tablas permiten editar y borrar filas:
+Las páginas de gestión se renderizan del lado del servidor con `templ`. `/` es el listado de alumnos. `/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y el formulario de alta. Los formularios usan POST tradicional y el servidor redirige con HTTP 303 (Post/Redirect/Get).
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| `GET` | `/` | Listado y alta de alumnos |
+| `POST` | `/alumnos` | Alta; 303 hacia `/` |
+| `GET` | `/alumnos/{id}/editar` | Formulario de edición |
+| `POST` | `/alumnos/{id}` | Guardar plan, vencimiento y rutina; 303 hacia `/` |
+| `POST` | `/alumnos/{id}/eliminar` | Baja; 303 hacia `/` |
+| `GET` | `/profesores` | Listado y alta |
+| `POST` | `/profesores` | Alta; 303 hacia `/profesores` |
+| `GET` | `/profesores/{id}/editar` | Formulario de edición |
+| `POST` | `/profesores/{id}` | Guardar especialidad; 303 hacia `/profesores` |
+| `POST` | `/profesores/{id}/eliminar` | Baja; 303 hacia `/profesores` |
+| `GET` | `/ejercicios` | Listado y alta |
+| `POST` | `/ejercicios` | Alta; 303 hacia `/ejercicios` |
+| `GET` | `/ejercicios/{id}/editar` | Formulario de edición |
+| `POST` | `/ejercicios/{id}` | Guardar; 303 hacia `/ejercicios` |
+| `POST` | `/ejercicios/{id}/eliminar` | Baja; 303 hacia `/ejercicios` |
+| `GET` | `/rutinas` | Listado y alta |
+| `POST` | `/rutinas` | Alta; exige al menos un ejercicio; 303 hacia `/rutinas` |
+| `GET` | `/rutinas/{id}/editar` | Edición, con ejercicios ya asociados preseleccionados |
+| `POST` | `/rutinas/{id}` | Guardar atributos, profesor y ejercicios; 303 hacia `/rutinas` |
+| `POST` | `/rutinas/{id}/eliminar` | Baja; 303 hacia `/rutinas` |
+| `GET` | `/clases` | Listado y alta |
+| `POST` | `/clases` | Alta; 303 hacia `/clases` |
+| `GET` | `/clases/{id}/editar` | Formulario de edición |
+| `POST` | `/clases/{id}` | Guardar; 303 hacia `/clases` |
+| `POST` | `/clases/{id}/eliminar` | Baja; 303 hacia `/clases` |
+| `GET` | `/static/` | Archivos de `static/` (`/static/styles.css`) |
+
+Las cinco tablas permiten editar y borrar filas:
 alumnos permite cambiar plan, vencimiento y rutina asignada; profesores,
 especialidad; ejercicios, sus datos del catálogo; y rutinas/clases, sus atributos y
 profesor responsable. Rutinas y clases requieren seleccionar un profesor existente;
-un ejercicio que ya forma parte de una rutina no se puede borrar. Las vistas fuente
+un ejercicio que ya forma parte de una rutina no se puede borrar. Tampoco una rutina que un alumno tenga asignada, ni un profesor que todavía tenga rutinas o clases. Borrar una clase sí borra sus horarios y las inscripciones de esos horarios. Las vistas fuente
 están en `views/*.templ` y el CSS se sirve desde `static/`.
 
 El formulario de rutinas permite seleccionar varios ejercicios del catálogo. Al
@@ -251,9 +283,11 @@ pruebas; la interfaz web ya no la consume desde JavaScript:
 | `GET` | `/api/horarios/{id}/inscripciones` | Listar inscriptos |
 | `DELETE` | `/api/horarios/{id}/inscripciones/{alumno_id}` | Dar de baja |
 
-Códigos de estado: `201` al crear, `204` al borrar, `200` al consultar/actualizar,
-`400` datos inválidos o JSON malformado, `404` no encontrado, `409` conflicto
-(duplicado o cupo completo), `500` error interno.
+`dia_semana` acepta `lunes`, `martes`, `miercoles`, `jueves`, `viernes`, `sabado` o `domingo`. `hora_inicio` viaja como hora (`19:00` en `requests.hurl`). No hay `PUT` de horario ni de inscripción.
+
+Códigos de la API JSON: `201` al crear, `204` al borrar, `200` al consultar o actualizar, `400` si el JSON está malformado, el id es inválido, falla la validación o la base rechaza una clave foránea (`23503`, cuerpo `referencia inválida`), `404` si no existe, `409` si el email ya existe (`23505`) o el horario llegó al cupo, `500` en un error interno. Un ejercicio con el mismo nombre y grupo muscular también responde `400`.
+
+En los formularios HTML, esa clave foránea (`23503`) responde `409`.
 
 ### Prueba automática (requests.hurl)
 
@@ -323,21 +357,27 @@ En este TP la persistencia, los tests y la API cubren el modelo completo (usuari
 
 - Go `1.26.5`
 - sqlc `v1.31.1`
+- templ `v0.3.1100`
 - PostgreSQL `15-alpine` (imagen Docker)
 - Docker Compose `3.8`
 - Hurl `8.0.1` (para `make test-api` / `requests.hurl`)
 - `github.com/lib/pq` `v1.12.3`
+- Variable `PORT` (por defecto `8080`) y `DATABASE_URL` (si no está, vale el connection string de arriba)
 
 ## Estructura de capas
 
 - `internal/handler`: capa HTTP. Parsea JSON/URL, llama al servicio y traduce los
   errores de dominio a códigos de estado (`json.go`). No conoce SQL.
+- `internal/web`: páginas HTML. Formularios, catálogos y redirección 303. Tampoco conoce SQL.
+- `views/`: componentes templ (`layout.templ`, `entity_list.templ`, `entity_form.templ`).
 - `internal/service`: lógica de negocio y validaciones. Define los tipos del
   dominio (`*_types.go`), los servicios (CRUD) y los **puertos** (`ports.go`).
 - `db/sqlc`: código generado por sqlc (paquete `db`). `*db.Queries` implementa
   los puertos sin adaptador. `db/sqlc/alumno.go` y `db/sqlc/profesor.go` son
   archivos escritos a mano para el alta compuesta usuario + alumno/profesor.
 
-Flujo de una petición: `handler → service → puerto (interface) → *db.Queries → PostgreSQL`.
+Petición JSON: `internal/handler → service → puerto → *db.Queries → PostgreSQL`.
+
+Petición HTML: `internal/web → service → puerto → *db.Queries → PostgreSQL`.
 
 Si `make run-app` no puede publicar el puerto `5432`, ese puerto está ocupado y hay que liberarlo antes de volver a ejecutarlo.
