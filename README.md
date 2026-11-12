@@ -241,53 +241,7 @@ guarda con POST; eliminar también se solicita con POST porque los formularios H
 nativos solo soportan GET y POST. No se usa HTMX ni se modifica el DOM desde
 JavaScript para estas operaciones.
 
-La API JSON de TP3 se conserva en `/api/...` para clientes existentes y para sus
-pruebas; la interfaz web ya no la consume desde JavaScript:
-
-| Método | Ruta | Qué hace |
-|---|---|---|
-| `POST` | `/api/ejercicios` | Crear |
-| `GET` | `/api/ejercicios` | Listar |
-| `GET` | `/api/ejercicios/{id}` | Obtener (404 si no existe) |
-| `PUT` | `/api/ejercicios/{id}` | Actualizar |
-| `DELETE` | `/api/ejercicios/{id}` | Borrar (204) |
-| `POST` | `/api/alumnos` | Alta usuario+alumno (`CreateAlumno`) |
-| `GET` | `/api/alumnos` | Listar (join con usuario) |
-| `GET` | `/api/alumnos/{id}` | Ficha |
-| `PUT` | `/api/alumnos/{id}` | Plan / vencimiento / rutina |
-| `DELETE` | `/api/alumnos/{id}` | Borrar usuario (cascade al alumno) |
-| `POST` | `/api/profesores` | Alta usuario+profesor (`CreateProfesor`) |
-| `GET` | `/api/profesores` | Listar (join con usuario) |
-| `GET` | `/api/profesores/{id}` | Ficha |
-| `PUT` | `/api/profesores/{id}` | Actualizar especialidad |
-| `DELETE` | `/api/profesores/{id}` | Borrar usuario (cascade al profesor) |
-| `POST` | `/api/rutinas` | Crear |
-| `GET` | `/api/rutinas` | Listar |
-| `GET` | `/api/rutinas/{id}` | Obtener |
-| `PUT` | `/api/rutinas/{id}` | Actualizar |
-| `DELETE` | `/api/rutinas/{id}` | Borrar |
-| `POST` | `/api/rutinas/{id}/ejercicios` | Agregar ejercicio a la rutina |
-| `GET` | `/api/rutinas/{id}/ejercicios` | Listar ejercicios de la rutina |
-| `PUT` | `/api/rutinas/{id}/ejercicios/{ejercicio_id}` | Editar orden/series/reps |
-| `DELETE` | `/api/rutinas/{id}/ejercicios/{ejercicio_id}` | Quitar ejercicio |
-| `POST` | `/api/clases` | Crear |
-| `GET` | `/api/clases` | Listar |
-| `GET` | `/api/clases/{id}` | Obtener |
-| `PUT` | `/api/clases/{id}` | Actualizar |
-| `DELETE` | `/api/clases/{id}` | Borrar |
-| `POST` | `/api/clases/{id}/horarios` | Agregar horario a la clase |
-| `GET` | `/api/clases/{id}/horarios` | Listar horarios de la clase |
-| `GET` | `/api/horarios/{id}` | Obtener horario |
-| `DELETE` | `/api/horarios/{id}` | Borrar horario |
-| `POST` | `/api/horarios/{id}/inscripciones` | Inscribir alumno (valida cupo) |
-| `GET` | `/api/horarios/{id}/inscripciones` | Listar inscriptos |
-| `DELETE` | `/api/horarios/{id}/inscripciones/{alumno_id}` | Dar de baja |
-
-`dia_semana` acepta `lunes`, `martes`, `miercoles`, `jueves`, `viernes`, `sabado` o `domingo`. `hora_inicio` viaja como hora (`19:00` en `requests.hurl`). No hay `PUT` de horario ni de inscripción.
-
-Códigos de la API JSON: `201` al crear, `204` al borrar, `200` al consultar o actualizar, `400` si el JSON está malformado, el id es inválido, falla la validación o la base rechaza una clave foránea (`23503`, cuerpo `referencia inválida`), `404` si no existe, `409` si el email ya existe (`23505`) o el horario llegó al cupo, `500` en un error interno. Un ejercicio con el mismo nombre y grupo muscular también responde `400`.
-
-En los formularios HTML, esa clave foránea (`23503`) responde `409`.
+La API JSON de TP3 se conserva en `/api/...` para clientes existentes y para sus pruebas; la interfaz web ya no la consume desde JavaScript. Los endpoints son los mismos que se especifican en la rama `tp3`. Se dejan como ambiente de prueba: se pueden probar con curl o Postman, sin pasar por las páginas HTML.
 
 ### Prueba automática (requests.hurl)
 
