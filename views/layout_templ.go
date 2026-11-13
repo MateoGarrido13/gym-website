@@ -40,7 +40,7 @@ func Layout(title string, active string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/styles.css\"></head><body><div class=\"app-shell\"><aside class=\"sidebar\"><a class=\"brand\" href=\"/\" aria-label=\"Gym Web, inicio\"><span class=\"brand-mark\">GW</span> <span>Gym Web</span></a><nav class=\"navigation\" aria-label=\"Navegación principal\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/styles.css\"><!-- HTMX: intercepta los atributos hx-* y hace requests sin recargar la página --><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js\"></script><!-- Por defecto HTMX 2 descarta respuestas 4xx/5xx; acá le decimos que haga swap con cualquier código para poder mostrar errores de formulario --><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"...\",\"swap\":true}]}'></head><body><div class=\"app-shell\"><aside class=\"sidebar\"><a class=\"brand\" href=\"/\" aria-label=\"Gym Web, inicio\"><span class=\"brand-mark\">GW</span> <span>Gym Web</span></a><nav class=\"navigation\" aria-label=\"Navegación principal\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -247,7 +247,7 @@ func Layout(title string, active string) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/layout.templ`, Line: 30, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/layout.templ`, Line: 34, Col: 17}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {

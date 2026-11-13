@@ -50,7 +50,7 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 			}
 			page.Entities = append(page.Entities, views.Entity{
 				Values:  []string{item.Nombre + " " + item.Apellido, item.Email, stringValue(item.Telefono), detail},
-				EditURL: fmt.Sprintf("/alumnos/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/alumnos/%d/eliminar", item.ID),
+				EditURL: fmt.Sprintf("/alumnos/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/alumnos/%d", item.ID),
 			})
 		}
 		if editing {
@@ -71,7 +71,7 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 		for _, item := range items {
 			page.Entities = append(page.Entities, views.Entity{
 				Values:  []string{item.Nombre + " " + item.Apellido, item.Email, stringValue(item.Telefono), stringValue(item.Especialidad)},
-				EditURL: fmt.Sprintf("/profesores/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/profesores/%d/eliminar", item.ID),
+				EditURL: fmt.Sprintf("/profesores/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/profesores/%d", item.ID),
 			})
 		}
 	case "ejercicios":
@@ -85,7 +85,7 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 		for _, item := range items {
 			page.Entities = append(page.Entities, views.Entity{
 				Values:  []string{item.Nombre, stringValue(item.GrupoMuscular), stringValue(item.Descripcion)},
-				EditURL: fmt.Sprintf("/ejercicios/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/ejercicios/%d/eliminar", item.ID),
+				EditURL: fmt.Sprintf("/ejercicios/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/ejercicios/%d", item.ID),
 			})
 		}
 	case "rutinas":
@@ -110,7 +110,7 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 		for _, item := range items {
 			page.Entities = append(page.Entities, views.Entity{
 				Values:  []string{item.Nombre, fmt.Sprintf("%d semanas", item.DuracionSemanas), professors.labels[item.ProfesorID]},
-				EditURL: fmt.Sprintf("/rutinas/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/rutinas/%d/eliminar", item.ID),
+				EditURL: fmt.Sprintf("/rutinas/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/rutinas/%d", item.ID),
 			})
 		}
 
@@ -130,7 +130,7 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 		for _, item := range items {
 			page.Entities = append(page.Entities, views.Entity{
 				Values:  []string{item.Nombre, strconv.FormatInt(int64(item.MaxAlumnos), 10), professors.labels[item.ProfesorID]},
-				EditURL: fmt.Sprintf("/clases/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/clases/%d/eliminar", item.ID),
+				EditURL: fmt.Sprintf("/clases/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/clases/%d", item.ID),
 			})
 		}
 	default:

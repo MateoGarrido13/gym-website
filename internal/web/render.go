@@ -52,7 +52,7 @@ func (h *Handler) renderFormError(w http.ResponseWriter, r *http.Request, kind s
 				ID:        alumno.ID,
 				Values:    []string{alumno.Nombre + " " + alumno.Apellido, alumno.Email, stringValue(alumno.Telefono), detail},
 				EditURL:   fmt.Sprintf("/alumnos/%d/editar", alumno.ID),
-				DeleteURL: fmt.Sprintf("/alumnos/%d/eliminar", alumno.ID),
+				DeleteURL: fmt.Sprintf("/alumnos/%d", alumno.ID),
 			})
 		}
 	} else {
@@ -68,7 +68,7 @@ func (h *Handler) renderFormError(w http.ResponseWriter, r *http.Request, kind s
 				ID:        profesor.ID,
 				Values:    []string{profesor.Nombre + " " + profesor.Apellido, profesor.Email, stringValue(profesor.Telefono), stringValue(profesor.Especialidad)},
 				EditURL:   fmt.Sprintf("/profesores/%d/editar", profesor.ID),
-				DeleteURL: fmt.Sprintf("/profesores/%d/eliminar", profesor.ID),
+				DeleteURL: fmt.Sprintf("/profesores/%d", profesor.ID),
 			})
 		}
 	}

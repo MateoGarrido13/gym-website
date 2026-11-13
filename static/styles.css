@@ -85,7 +85,7 @@ td { color: #344239; font-size: 14px; }
 tbody tr:last-child td { border-bottom: 0; }
 .table-empty { padding: 24px; color: var(--muted); text-align: center; white-space: normal; }
 .row-actions { white-space: nowrap; }
-.row-actions form { display: inline; margin-left: 12px; }
+.row-actions .table-action + .table-action { margin-left: 12px; }
 .table-action { padding: 4px 0; border: 0; color: var(--green); background: none; cursor: pointer; font-size: 14px; text-decoration: underline; }
 .table-action-danger { color: var(--danger); }
 

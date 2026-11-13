@@ -1,39 +1,45 @@
 package views
 
 templ Layout(title string, active string) {
-	<!doctype html>
-	<html lang="es">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<meta name="theme-color" content="#111b18"/>
-			<title>{ title + " | Gym Web" }</title>
-			<link rel="stylesheet" href="/static/styles.css"/>
-		</head>
-		<body>
-			<div class="app-shell">
-				<aside class="sidebar">
-					<a class="brand" href="/" aria-label="Gym Web, inicio">
-						<span class="brand-mark">GW</span>
-						<span>Gym Web</span>
-					</a>
-					<nav class="navigation" aria-label="Navegación principal">
-						<a class={ navClass(active, "alumnos") } href="/">Alumnos</a>
-						<a class={ navClass(active, "profesores") } href="/profesores">Profesores</a>
-						<a class={ navClass(active, "ejercicios") } href="/ejercicios">Ejercicios</a>
-						<a class={ navClass(active, "rutinas") } href="/rutinas">Rutinas</a>
-						<a class={ navClass(active, "clases") } href="/clases">Clases</a>
-					</nav>
-				</aside>
-				<main class="workspace">
-					<header class="topbar">
-						<h1>{ title }</h1>
-					</header>
-					<div class="page-content">
-						{ children... }
-					</div>
-				</main>
+<!doctype html>
+<html lang="es">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="theme-color" content="#111b18" />
+	<title>{ title + " | Gym Web" }</title>
+	<link rel="stylesheet" href="/static/styles.css" />
+	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script> //HTMX
+	<!-- Por defecto HTMX 2 descarta respuestas 4xx/5xx; acá le decimos que haga swap con cualquier código para poder mostrar errores de formulario -->
+	<meta name="htmx-config" content='{"responseHandling":[{"code":"...","swap":true}]}' />
+</head>
+
+<body>
+	<div class="app-shell">
+		<aside class="sidebar">
+			<a class="brand" href="/" aria-label="Gym Web, inicio">
+				<span class="brand-mark">GW</span>
+				<span>Gym Web</span>
+			</a>
+			<nav class="navigation" aria-label="Navegación principal">
+				<a class={ navClass(active, "alumnos" ) } href="/">Alumnos</a>
+				<a class={ navClass(active, "profesores" ) } href="/profesores">Profesores</a>
+				<a class={ navClass(active, "ejercicios" ) } href="/ejercicios">Ejercicios</a>
+				<a class={ navClass(active, "rutinas" ) } href="/rutinas">Rutinas</a>
+				<a class={ navClass(active, "clases" ) } href="/clases">Clases</a>
+			</nav>
+		</aside>
+		<main class="workspace">
+			<header class="topbar">
+				<h1>{ title }</h1>
+			</header>
+			<div class="page-content">
+				{ children... }
 			</div>
-		</body>
-	</html>
+		</main>
+	</div>
+</body>
+
+</html>
 }

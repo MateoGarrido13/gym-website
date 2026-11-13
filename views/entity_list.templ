@@ -1,7 +1,8 @@
 package views
 
 templ EntityList(data PageData) {
-	<section class="panel list-panel server-list-panel">
+	<!-- id fijo: es el hx-target del formulario de alta (paso 5) -->
+	<section id="entity-list" class="panel list-panel server-list-panel">
 		<div class="server-panel-heading">
 			<div>
 				<p class="eyebrow">REGISTROS</p>
@@ -32,9 +33,17 @@ templ EntityList(data PageData) {
 								if data.ShowActions {
 									<td class="row-actions">
 										<a class="table-action" href={ entity.EditURL }>Editar</a>
-										<form method="post" action={ entity.DeleteURL }>
-											<button class="table-action table-action-danger" type="submit">Eliminar</button>
-										</form>
+										<!-- hx-delete: manda DELETE a /<entidad>/{id} sin recargar.
+										     hx-target="closest tr": el elemento a reemplazar es la fila que contiene al botón.
+										     hx-swap="outerHTML": se reemplaza la fila entera por la respuesta (vacía) => desaparece. -->
+										<button
+											class="table-action table-action-danger"
+											type="button"
+											hx-delete={ entity.DeleteURL }
+											hx-target="closest tr"
+											hx-swap="outerHTML"
+											hx-confirm="¿Eliminar este registro?"
+										>Eliminar</button>
 									</td>
 								}
 							</tr>
