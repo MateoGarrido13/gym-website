@@ -233,5 +233,7 @@ func (h *Handler) deleteCatalog(w http.ResponseWriter, r *http.Request, kind str
 		h.showCatalog(w, r, kind, views.FormValues{}, false, 0, message, status)
 		return
 	}
-	http.Redirect(w, r, catalogPathForRedirect(kind), http.StatusSeeOther)
+	// HTMX hizo hx-delete con hx-target="closest tr" y hx-swap="outerHTML":
+	// un 200 con cuerpo vacío reemplaza esa fila por "nada", es decir la borra de la vista.
+	w.WriteHeader(http.StatusOK)
 }
