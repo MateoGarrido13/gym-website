@@ -122,7 +122,8 @@ func (h *Handler) CreateAlumno(w http.ResponseWriter, r *http.Request) {
 		h.renderFormError(w, r, "alumnos", values, message, status)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther) // redirigimos a la pagina ppal
+	// HTMX: en vez de redirigir, devolvemos el fragmento de la lista actualizado.
+	h.renderList(w, r, "alumnos", http.StatusOK)
 }
 
 func (h *Handler) CreateProfesor(w http.ResponseWriter, r *http.Request) {
@@ -149,5 +150,6 @@ func (h *Handler) CreateProfesor(w http.ResponseWriter, r *http.Request) {
 		h.renderFormError(w, r, "profesores", values, message, status)
 		return
 	}
-	http.Redirect(w, r, "/profesores", http.StatusSeeOther)
+	// HTMX: en vez de redirigir, devolvemos el fragmento de la lista actualizado.
+	h.renderList(w, r, "profesores", http.StatusOK)
 }

@@ -203,7 +203,13 @@ func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind strin
 		h.showCatalog(w, r, kind, values, update, id, message, status)
 		return
 	}
-	http.Redirect(w, r, catalogPathForRedirect(kind), http.StatusSeeOther)
+	if update {
+		// La edición sigue siendo otra página; no la tocamos para HTMX.
+		http.Redirect(w, r, catalogPathForRedirect(kind), http.StatusSeeOther)
+		return
+	}
+	// HTMX: en el alta, devolvemos el fragmento de la lista actualizado en vez de redirigir.
+	h.renderList(w, r, kind, http.StatusOK)
 }
 
 func (h *Handler) deleteCatalog(w http.ResponseWriter, r *http.Request, kind string) {

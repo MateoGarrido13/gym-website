@@ -16,7 +16,18 @@ templ EntityForm(data PageData) {
 		if data.FormError != "" {
 			<p class="form-error" role="alert">{ data.FormError }</p>
 		}
-		<form class="server-form" method="post" action={ data.Action }>
+		<!-- Solo en alta (no edición): hx-post manda el form sin recargar, hx-target
+		     dice que la respuesta va a #entity-list, y outerHTML la reemplaza entera. -->
+		<form
+			class="server-form"
+			method="post"
+			action={ data.Action }
+			if !data.IsEditing {
+				hx-post={ data.Action }
+				hx-target="#entity-list"
+				hx-swap="outerHTML"
+			}
+		>
 			<div class="server-fields">
 				if data.Kind == "ejercicios" {
 					<label class="field field-wide">
