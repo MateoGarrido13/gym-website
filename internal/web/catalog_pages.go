@@ -53,6 +53,7 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 				EditURL: fmt.Sprintf("/alumnos/%d/editar", item.ID), DeleteURL: fmt.Sprintf("/alumnos/%d", item.ID),
 			})
 		}
+		page.FormValues.FechaInscripcion = defaultEnrollmentDate(values.FechaInscripcion)
 		if editing {
 			routines, err := h.routineOptions(r)
 			if err != nil {

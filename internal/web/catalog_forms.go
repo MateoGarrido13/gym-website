@@ -87,6 +87,11 @@ func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind strin
 	}
 	values := views.FormValues{
 		Nombre:            strings.TrimSpace(r.FormValue("nombre")),
+		Apellido:          strings.TrimSpace(r.FormValue("apellido")),
+		Email:             strings.TrimSpace(r.FormValue("email")),
+		Contrasena:        r.FormValue("contrasena"),
+		Telefono:          strings.TrimSpace(r.FormValue("telefono")),
+		FechaInscripcion:  strings.TrimSpace(r.FormValue("fecha_inscripcion")),
 		FechaVto:          strings.TrimSpace(r.FormValue("fecha_vto")),
 		TipoPlan:          strings.TrimSpace(r.FormValue("tipo_plan")),
 		Especialidad:      strings.TrimSpace(r.FormValue("especialidad")),
@@ -112,20 +117,52 @@ func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind strin
 	var err error
 	switch kind {
 	case "alumnos":
-		routineID, parseErr := optionalPositiveInt32(values.RutinaID, "Selecciona una rutina válida.")
-		if parseErr != nil {
-			h.showCatalog(w, r, kind, values, true, id, parseErr.Error(), http.StatusBadRequest)
-			return
+		if update {
+			routineID, parseErr := optionalPositiveInt32(values.RutinaID, "Selecciona una rutina válida.")
+			if parseErr != nil {
+				h.showCatalog(w, r, kind, values, true, id, parseErr.Error(), http.StatusBadRequest)
+				return
+			}
+			_, err = h.alumnos.Update(r.Context(), id, service.AlumnoUpdateInput{
+				FechaVto: optional(values.FechaVto),
+				TipoPlan: optional(values.TipoPlan),
+				RutinaID: routineID,
+			})
+		} else {
+			if identityErr := validateIdentity(values); identityErr != nil {
+				h.showCatalog(w, r, kind, values, false, 0, identityErr.Error(), http.StatusBadRequest)
+				return
+			}
+			_, err = h.alumnos.Create(r.Context(), service.AlumnoCreateInput{
+				Email:            values.Email,
+				Contrasena:       values.Contrasena,
+				Nombre:           values.Nombre,
+				Apellido:         values.Apellido,
+				Telefono:         optional(values.Telefono),
+				FechaInscripcion: values.FechaInscripcion,
+				FechaVto:         optional(values.FechaVto),
+				TipoPlan:         optional(values.TipoPlan),
+			})
 		}
-		_, err = h.alumnos.Update(r.Context(), id, service.AlumnoUpdateInput{
-			FechaVto: optional(values.FechaVto),
-			TipoPlan: optional(values.TipoPlan),
-			RutinaID: routineID,
-		})
 	case "profesores":
-		_, err = h.profesores.Update(r.Context(), id, service.ProfesorUpdateInput{
-			Especialidad: optional(values.Especialidad),
-		})
+		if update {
+			_, err = h.profesores.Update(r.Context(), id, service.ProfesorUpdateInput{
+				Especialidad: optional(values.Especialidad),
+			})
+		} else {
+			if identityErr := validateIdentity(values); identityErr != nil {
+				h.showCatalog(w, r, kind, values, false, 0, identityErr.Error(), http.StatusBadRequest)
+				return
+			}
+			_, err = h.profesores.Create(r.Context(), service.ProfesorCreateInput{
+				Email:        values.Email,
+				Contrasena:   values.Contrasena,
+				Nombre:       values.Nombre,
+				Apellido:     values.Apellido,
+				Telefono:     optional(values.Telefono),
+				Especialidad: optional(values.Especialidad),
+			})
+		}
 	case "ejercicios":
 		input := service.EjercicioInput{
 			Nombre:        values.Nombre,

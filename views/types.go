@@ -20,6 +20,7 @@ type FormValues struct {
 	Nombre            string
 	Apellido          string
 	Email             string
+	Contrasena        string
 	Telefono          string
 	FechaInscripcion  string
 	FechaVto          string

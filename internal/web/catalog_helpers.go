@@ -4,9 +4,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/mail"
 	"strconv"
 
 	"PRACTICO_DOS/internal/service"
+	"PRACTICO_DOS/views"
 	"github.com/lib/pq"
 )
 
@@ -64,11 +66,26 @@ func catalogFormError(err error) (string, int) {
 		return "No se puede eliminar porque el registro está relacionado con otros datos.", http.StatusConflict
 	}
 	var pqErr *pq.Error
-	if errors.As(err, &pqErr) && pqErr.Code == "23503" {
-		return "No se pudo completar el cambio: verifica que el profesor exista y que el registro no esté asociado a otros datos.", http.StatusConflict
+	if errors.As(err, &pqErr) {
+		switch pqErr.Code {
+		case "23505":
+			return "Ya existe una persona registrada con ese correo electrónico.", http.StatusConflict
+		case "23503":
+			return "No se pudo completar el cambio: verifica que el profesor exista y que el registro no esté asociado a otros datos.", http.StatusConflict
+		}
 	}
 	log.Printf("error al guardar cambios del catálogo: %v", err)
 	return "No se pudo guardar el registro. Intenta nuevamente.", http.StatusInternalServerError
+}
+
+func validateIdentity(values views.FormValues) error {
+	if values.Nombre == "" || values.Apellido == "" || values.Email == "" || values.Contrasena == "" {
+		return errors.New("Nombre, apellido, correo y contraseña son obligatorios.")
+	}
+	if _, err := mail.ParseAddress(values.Email); err != nil {
+		return errors.New("Ingresa un correo electrónico válido.")
+	}
+	return nil
 }
 
 func catalogDescription(kind string) string {

@@ -26,6 +26,18 @@ func (h *Handler) DeleteEjercicio(w http.ResponseWriter, r *http.Request) {
 	h.deleteCatalog(w, r, "ejercicios")
 }
 
+func (h *Handler) Alumnos(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	h.showCatalog(w, r, "alumnos", views.FormValues{}, false, 0, "", http.StatusOK)
+}
+
+func (h *Handler) CreateAlumno(w http.ResponseWriter, r *http.Request) {
+	h.saveCatalog(w, r, "alumnos", false)
+}
+
 func (h *Handler) EditAlumno(w http.ResponseWriter, r *http.Request) {
 	h.editCatalog(w, r, "alumnos")
 }
@@ -36,6 +48,14 @@ func (h *Handler) UpdateAlumno(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DeleteAlumno(w http.ResponseWriter, r *http.Request) {
 	h.deleteCatalog(w, r, "alumnos")
+}
+
+func (h *Handler) Profesores(w http.ResponseWriter, r *http.Request) {
+	h.showCatalog(w, r, "profesores", views.FormValues{}, false, 0, "", http.StatusOK)
+}
+
+func (h *Handler) CreateProfesor(w http.ResponseWriter, r *http.Request) {
+	h.saveCatalog(w, r, "profesores", false)
 }
 
 func (h *Handler) EditProfesor(w http.ResponseWriter, r *http.Request) {
