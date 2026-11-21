@@ -23,7 +23,7 @@ func (h *Handler) editCatalog(w http.ResponseWriter, r *http.Request, kind strin
 		h.catalogRequestError(w, r, kind, err)
 		return
 	}
-	h.showCatalog(w, r, kind, values, true, id, "", http.StatusOK)
+	h.showCatalog(w, r, kind, catalogView{Values: values, Editing: true, ID: id})
 }
 
 func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind string, update bool) {
@@ -68,11 +68,11 @@ func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind strin
 
 	if err := resource.Save(r, id, update, values); err != nil {
 		if ferr, isFormError := err.(*formError); isFormError {
-			h.showCatalog(w, r, kind, values, update, id, ferr.message, ferr.status)
+			h.showCatalog(w, r, kind, catalogView{Values: values, Editing: update, ID: id, Message: ferr.message, Status: ferr.status})
 			return
 		}
 		message, status := catalogFormError(err)
-		h.showCatalog(w, r, kind, values, update, id, message, status)
+		h.showCatalog(w, r, kind, catalogView{Values: values, Editing: update, ID: id, Message: message, Status: status})
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *Handler) deleteCatalog(w http.ResponseWriter, r *http.Request, kind str
 
 	if err := resource.Delete(r, id); err != nil {
 		message, status := catalogFormError(err)
-		h.showCatalog(w, r, kind, views.FormValues{}, false, 0, message, status)
+		h.showCatalog(w, r, kind, catalogView{Message: message, Status: status})
 		return
 	}
 	// HTMX hizo hx-delete con hx-target="closest tr" y hx-swap="outerHTML":

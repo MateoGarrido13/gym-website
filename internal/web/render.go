@@ -16,7 +16,7 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, page views.Page
 // sin Layout ni EntityForm alrededor. Es lo que usan los handlers de alta: la
 // respuesta es justo el fragmento que HTMX va a pegar en #entity-list.
 func (h *Handler) renderList(w http.ResponseWriter, r *http.Request, kind string, status int) {
-	page, err := h.catalogPage(r, kind, views.FormValues{}, false, 0, "")
+	page, err := h.catalogPage(r, kind, catalogView{})
 	if err != nil {
 		log.Printf("no se pudo volver a listar %s: %v", kind, err)
 		http.Error(w, "No se pudieron cargar los registros.", http.StatusInternalServerError)

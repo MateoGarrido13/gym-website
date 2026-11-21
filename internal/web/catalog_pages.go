@@ -9,8 +9,22 @@ import (
 	"PRACTICO_DOS/views"
 )
 
-func (h *Handler) showCatalog(w http.ResponseWriter, r *http.Request, kind string, values views.FormValues, editing bool, id int32, message string, status int) {
-	page, err := h.catalogPage(r, kind, values, editing, id, message)
+// catalogView agrupa lo que define cómo se dibuja el formulario y la respuesta.
+// El valor cero significa "formulario de crear en blanco, sin error, status 200".
+type catalogView struct {
+	Values  views.FormValues // texto precargado en los inputs
+	Editing bool             // true si es el formulario de edición
+	ID      int32            // id del registro; solo se usa si Editing
+	Message string           // mensaje de error opcional
+	Status  int              // código HTTP; 0 equivale a 200
+}
+
+func (h *Handler) showCatalog(w http.ResponseWriter, r *http.Request, kind string, view catalogView) {
+	status := view.Status
+	if status == 0 {
+		status = http.StatusOK
+	}
+	page, err := h.catalogPage(r, kind, view)
 	if err != nil {
 		log.Printf("no se pudo cargar %s para la página: %v", kind, err)
 		http.Error(w, "No se pudieron cargar los registros.", http.StatusInternalServerError)
@@ -19,7 +33,7 @@ func (h *Handler) showCatalog(w http.ResponseWriter, r *http.Request, kind strin
 	h.renderStatus(w, r, page, status)
 }
 
-func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormValues, editing bool, id int32, message string) (views.PageData, error) {
+func (h *Handler) catalogPage(r *http.Request, kind string, view catalogView) (views.PageData, error) {
 	resource, ok := h.resourceFor(kind)
 	if !ok {
 		return views.PageData{}, service.ErrNotFound
@@ -32,10 +46,10 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 		Title:       resource.Title(),
 		Headers:     resource.Headers(),
 		Description: resource.Description(),
-		FormError:   message,
-		IsEditing:   editing,
+		FormError:   view.Message,
+		IsEditing:   view.Editing,
 		ShowActions: true,
-		FormValues:  values,
+		FormValues:  view.Values,
 	}
 
 	entities, err := resource.Entities(r)
@@ -44,12 +58,12 @@ func (h *Handler) catalogPage(r *http.Request, kind string, values views.FormVal
 	}
 	page.Entities = entities
 
-	if err := resource.FormOptions(r, &page, values, editing); err != nil {
+	if err := resource.FormOptions(r, &page, view.Values, view.Editing); err != nil {
 		return page, err
 	}
 
-	if editing {
-		page.Action = fmt.Sprintf("/%s/%d", kind, id)
+	if view.Editing {
+		page.Action = fmt.Sprintf("/%s/%d", kind, view.ID)
 	}
 	return page, nil
 }

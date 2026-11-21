@@ -2,12 +2,10 @@ package web
 
 import (
 	"net/http"
-
-	"PRACTICO_DOS/views"
 )
 
 func (h *Handler) Ejercicios(w http.ResponseWriter, r *http.Request) {
-	h.showCatalog(w, r, "ejercicios", views.FormValues{}, false, 0, "", http.StatusOK)
+	h.showCatalog(w, r, "ejercicios", catalogView{})
 }
 
 func (h *Handler) EditEjercicio(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +29,7 @@ func (h *Handler) Alumnos(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	h.showCatalog(w, r, "alumnos", views.FormValues{}, false, 0, "", http.StatusOK)
+	h.showCatalog(w, r, "alumnos", catalogView{})
 }
 
 func (h *Handler) CreateAlumno(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +49,7 @@ func (h *Handler) DeleteAlumno(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Profesores(w http.ResponseWriter, r *http.Request) {
-	h.showCatalog(w, r, "profesores", views.FormValues{}, false, 0, "", http.StatusOK)
+	h.showCatalog(w, r, "profesores", catalogView{})
 }
 
 func (h *Handler) CreateProfesor(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +69,7 @@ func (h *Handler) DeleteProfesor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Rutinas(w http.ResponseWriter, r *http.Request) {
-	h.showCatalog(w, r, "rutinas", views.FormValues{}, false, 0, "", http.StatusOK)
+	h.showCatalog(w, r, "rutinas", catalogView{})
 }
 
 func (h *Handler) EditRutina(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +89,7 @@ func (h *Handler) DeleteRutina(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Clases(w http.ResponseWriter, r *http.Request) {
-	h.showCatalog(w, r, "clases", views.FormValues{}, false, 0, "", http.StatusOK)
+	h.showCatalog(w, r, "clases", catalogView{})
 }
 
 func (h *Handler) EditClase(w http.ResponseWriter, r *http.Request) {
