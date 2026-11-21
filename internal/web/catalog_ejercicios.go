@@ -52,17 +52,21 @@ func (res ejerciciosResource) EditValues(r *http.Request, id int32) (views.FormV
 	}, nil
 }
 
-func (res ejerciciosResource) Save(r *http.Request, id int32, update bool, values views.FormValues) error {
-	input := service.EjercicioInput{
+func ejercicioInput(values views.FormValues) service.EjercicioInput {
+	return service.EjercicioInput{
 		Nombre:        values.Nombre,
 		Descripcion:   optional(values.Descripcion),
 		GrupoMuscular: optional(values.GrupoMuscular),
 	}
-	if update {
-		_, err := res.h.ejercicios.Update(r.Context(), id, input)
-		return err
-	}
-	_, err := res.h.ejercicios.Create(r.Context(), input)
+}
+
+func (res ejerciciosResource) Create(r *http.Request, values views.FormValues) error {
+	_, err := res.h.ejercicios.Create(r.Context(), ejercicioInput(values))
+	return err
+}
+
+func (res ejerciciosResource) Update(r *http.Request, id int32, values views.FormValues) error {
+	_, err := res.h.ejercicios.Update(r.Context(), id, ejercicioInput(values))
 	return err
 }
 

@@ -62,22 +62,36 @@ func (res clasesResource) EditValues(r *http.Request, id int32) (views.FormValue
 	}, nil
 }
 
-func (res clasesResource) Save(r *http.Request, id int32, update bool, values views.FormValues) error {
-	maxStudents, err := positiveInt32(values.MaxAlumnos, "El cupo debe ser un número mayor que cero.")
+// claseFormValues valida y convierte los campos numéricos del formulario.
+func claseFormValues(values views.FormValues) (maxStudents, professorID int32, err error) {
+	maxStudents, err = positiveInt32(values.MaxAlumnos, "El cupo debe ser un número mayor que cero.")
 	if err != nil {
-		return &formError{err.Error(), http.StatusBadRequest}
+		return 0, 0, &formError{err.Error(), http.StatusBadRequest}
 	}
-	professorID, err := positiveInt32(values.ProfesorID, "Selecciona un profesor.")
+	professorID, err = positiveInt32(values.ProfesorID, "Selecciona un profesor.")
 	if err != nil {
-		return &formError{err.Error(), http.StatusBadRequest}
+		return 0, 0, &formError{err.Error(), http.StatusBadRequest}
 	}
-	if update {
-		_, err := res.h.clases.Update(r.Context(), id, service.ClaseUpdateInput{
-			Nombre: values.Nombre, MaxAlumnos: maxStudents, ProfesorID: professorID,
-		})
+	return maxStudents, professorID, nil
+}
+
+func (res clasesResource) Create(r *http.Request, values views.FormValues) error {
+	maxStudents, professorID, err := claseFormValues(values)
+	if err != nil {
 		return err
 	}
 	_, err = res.h.clases.Create(r.Context(), service.ClaseCreateInput{
+		Nombre: values.Nombre, MaxAlumnos: maxStudents, ProfesorID: professorID,
+	})
+	return err
+}
+
+func (res clasesResource) Update(r *http.Request, id int32, values views.FormValues) error {
+	maxStudents, professorID, err := claseFormValues(values)
+	if err != nil {
+		return err
+	}
+	_, err = res.h.clases.Update(r.Context(), id, service.ClaseUpdateInput{
 		Nombre: values.Nombre, MaxAlumnos: maxStudents, ProfesorID: professorID,
 	})
 	return err

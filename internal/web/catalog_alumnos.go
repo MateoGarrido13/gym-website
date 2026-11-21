@@ -72,19 +72,7 @@ func (res alumnosResource) EditValues(r *http.Request, id int32) (views.FormValu
 	return values, nil
 }
 
-func (res alumnosResource) Save(r *http.Request, id int32, update bool, values views.FormValues) error {
-	if update {
-		routineID, err := optionalPositiveInt32(values.RutinaID, "Selecciona una rutina válida.")
-		if err != nil {
-			return &formError{err.Error(), http.StatusBadRequest}
-		}
-		_, err = res.h.alumnos.Update(r.Context(), id, service.AlumnoUpdateInput{
-			FechaVto: optional(values.FechaVto),
-			TipoPlan: optional(values.TipoPlan),
-			RutinaID: routineID,
-		})
-		return err
-	}
+func (res alumnosResource) Create(r *http.Request, values views.FormValues) error {
 	if err := validateIdentity(values); err != nil {
 		return &formError{err.Error(), http.StatusBadRequest}
 	}
@@ -97,6 +85,19 @@ func (res alumnosResource) Save(r *http.Request, id int32, update bool, values v
 		FechaInscripcion: values.FechaInscripcion,
 		FechaVto:         optional(values.FechaVto),
 		TipoPlan:         optional(values.TipoPlan),
+	})
+	return err
+}
+
+func (res alumnosResource) Update(r *http.Request, id int32, values views.FormValues) error {
+	routineID, err := optionalPositiveInt32(values.RutinaID, "Selecciona una rutina válida.")
+	if err != nil {
+		return &formError{err.Error(), http.StatusBadRequest}
+	}
+	_, err = res.h.alumnos.Update(r.Context(), id, service.AlumnoUpdateInput{
+		FechaVto: optional(values.FechaVto),
+		TipoPlan: optional(values.TipoPlan),
+		RutinaID: routineID,
 	})
 	return err
 }

@@ -7,7 +7,7 @@ import (
 )
 
 // catalogResource aísla, por cada entidad del catálogo, la lógica que antes
-// vivía mezclada en un switch gigante (catalogPage, saveCatalog, etc). El
+// vivía mezclada en un switch gigante (catalogPage, createCatalog, etc). El
 // único lugar que todavía elige "qué entidad es" es resourceFor.
 type catalogResource interface {
 	Title() string
@@ -25,10 +25,14 @@ type catalogResource interface {
 	// el formulario de edición.
 	EditValues(r *http.Request, id int32) (views.FormValues, error)
 
-	// Save crea o actualiza (según update) el registro con los valores del
-	// formulario. Los errores de validación propia deben envolverse con
-	// &formError{...} para distinguirse de errores del servicio.
-	Save(r *http.Request, id int32, update bool, values views.FormValues) error
+	// Create da de alta un registro con los valores del formulario. Los
+	// errores de validación propia deben envolverse con &formError{...} para
+	// distinguirse de errores del servicio.
+	Create(r *http.Request, values views.FormValues) error
+
+	// Update modifica el registro id con los valores del formulario. Mismo
+	// criterio de errores que Create.
+	Update(r *http.Request, id int32, values views.FormValues) error
 
 	Delete(r *http.Request, id int32) error
 }

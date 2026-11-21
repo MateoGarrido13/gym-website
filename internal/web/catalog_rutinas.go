@@ -77,26 +77,27 @@ func (res rutinasResource) EditValues(r *http.Request, id int32) (views.FormValu
 	return values, nil
 }
 
-func (res rutinasResource) Save(r *http.Request, id int32, update bool, values views.FormValues) error {
-	weeks, err := positiveInt32(values.DuracionSemanas, "La duración debe ser un número mayor que cero.")
+// formValues valida los campos del formulario de rutinas.
+func (res rutinasResource) formValues(r *http.Request, values views.FormValues) (weeks, professorID int32, exerciseIDs []int32, err error) {
+	weeks, err = positiveInt32(values.DuracionSemanas, "La duración debe ser un número mayor que cero.")
 	if err != nil {
-		return &formError{err.Error(), http.StatusBadRequest}
+		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
 	}
-	professorID, err := positiveInt32(values.ProfesorID, "Selecciona un profesor.")
+	professorID, err = positiveInt32(values.ProfesorID, "Selecciona un profesor.")
 	if err != nil {
-		return &formError{err.Error(), http.StatusBadRequest}
+		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
 	}
-	exerciseIDs, err := res.h.validateRoutineExerciseIDs(r, values.SelectedExercises)
+	exerciseIDs, err = res.h.validateRoutineExerciseIDs(r, values.SelectedExercises)
 	if err != nil {
-		return &formError{err.Error(), http.StatusBadRequest}
+		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
 	}
-	if update {
-		if _, err := res.h.rutinas.Update(r.Context(), id, service.RutinaUpdateInput{
-			Nombre: values.Nombre, DuracionSemanas: weeks, ProfesorID: professorID,
-		}); err != nil {
-			return err
-		}
-		return res.h.syncRoutineExercises(r, id, exerciseIDs)
+	return weeks, professorID, exerciseIDs, nil
+}
+
+func (res rutinasResource) Create(r *http.Request, values views.FormValues) error {
+	weeks, professorID, exerciseIDs, err := res.formValues(r, values)
+	if err != nil {
+		return err
 	}
 	created, err := res.h.rutinas.Create(r.Context(), service.RutinaCreateInput{
 		Nombre: values.Nombre, DuracionSemanas: weeks, ProfesorID: professorID,
@@ -111,6 +112,19 @@ func (res rutinasResource) Save(r *http.Request, id int32, update bool, values v
 		return err
 	}
 	return nil
+}
+
+func (res rutinasResource) Update(r *http.Request, id int32, values views.FormValues) error {
+	weeks, professorID, exerciseIDs, err := res.formValues(r, values)
+	if err != nil {
+		return err
+	}
+	if _, err := res.h.rutinas.Update(r.Context(), id, service.RutinaUpdateInput{
+		Nombre: values.Nombre, DuracionSemanas: weeks, ProfesorID: professorID,
+	}); err != nil {
+		return err
+	}
+	return res.h.syncRoutineExercises(r, id, exerciseIDs)
 }
 
 func (res rutinasResource) Delete(r *http.Request, id int32) error {

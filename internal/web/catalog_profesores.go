@@ -48,13 +48,7 @@ func (res profesoresResource) EditValues(r *http.Request, id int32) (views.FormV
 	return views.FormValues{Especialidad: stringValue(item.Especialidad)}, nil
 }
 
-func (res profesoresResource) Save(r *http.Request, id int32, update bool, values views.FormValues) error {
-	if update {
-		_, err := res.h.profesores.Update(r.Context(), id, service.ProfesorUpdateInput{
-			Especialidad: optional(values.Especialidad),
-		})
-		return err
-	}
+func (res profesoresResource) Create(r *http.Request, values views.FormValues) error {
 	if err := validateIdentity(values); err != nil {
 		return &formError{err.Error(), http.StatusBadRequest}
 	}
@@ -64,6 +58,13 @@ func (res profesoresResource) Save(r *http.Request, id int32, update bool, value
 		Nombre:       values.Nombre,
 		Apellido:     values.Apellido,
 		Telefono:     optional(values.Telefono),
+		Especialidad: optional(values.Especialidad),
+	})
+	return err
+}
+
+func (res profesoresResource) Update(r *http.Request, id int32, values views.FormValues) error {
+	_, err := res.h.profesores.Update(r.Context(), id, service.ProfesorUpdateInput{
 		Especialidad: optional(values.Especialidad),
 	})
 	return err
