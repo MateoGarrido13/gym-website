@@ -1,0 +1,26 @@
+package views
+
+templ AlumnoCreateFields(data PageData) {
+	@IdentityFields(data)
+	@TextField("field", "Fecha de inscripción", "date", "fecha_inscripcion", data.FormValues.FechaInscripcion, true, nil)
+	@TipoPlanField(data)
+	@FechaVtoField(data)
+}
+
+templ AlumnoEditFields(data PageData) {
+	@TipoPlanField(data)
+	@FechaVtoField(data)
+	<label class="field field-wide">
+		<span>Rutina asignada</span>
+		<select name="rutina_id">
+			<option value="">Sin rutina asignada</option>
+			for _, option := range data.Options {
+				if data.FormValues.RutinaID == stringID(option.ID) {
+					<option value={ stringID(option.ID) } selected>{ option.Label }</option>
+				} else {
+					<option value={ stringID(option.ID) }>{ option.Label }</option>
+				}
+			}
+		</select>
+	</label>
+}

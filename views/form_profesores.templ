@@ -1,0 +1,10 @@
+package views
+
+templ ProfesorCreateFields(data PageData) {
+	@IdentityFields(data)
+	@TextField("field", "Especialidad", "text", "especialidad", data.FormValues.Especialidad, false, templ.Attributes{"placeholder": "Ej. Musculación, yoga"})
+}
+
+templ ProfesorEditFields(data PageData) {
+	@EspecialidadField(data)
+}

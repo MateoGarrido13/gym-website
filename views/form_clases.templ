@@ -1,0 +1,7 @@
+package views
+
+templ ClaseFields(data PageData) {
+	@NombreField(data)
+	@TextField("field", "Cupo máximo", "number", "max_alumnos", data.FormValues.MaxAlumnos, true, templ.Attributes{"min": "1"})
+	@ProfesorSelect(data)
+}

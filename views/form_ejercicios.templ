@@ -1,0 +1,10 @@
+package views
+
+templ EjercicioFields(data PageData) {
+	@NombreField(data)
+	@TextField("field", "Grupo muscular", "text", "grupo_muscular", data.FormValues.GrupoMuscular, true, templ.Attributes{"placeholder": "Ej. piernas, espalda"})
+	<label class="field field-wide">
+		<span>Descripción</span>
+		<textarea name="descripcion" rows="3">{ data.FormValues.Descripcion }</textarea>
+	</label>
+}
