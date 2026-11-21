@@ -1,0 +1,62 @@
+package views
+
+// TextField es un <label> con un <input>. class permite variar el ancho
+// ("field" o "field field-wide"); attrs recibe atributos extra (placeholder,
+// autocomplete, min, ...).
+templ TextField(class, label, inputType, name, value string, required bool, attrs templ.Attributes) {
+	<label class={ class }>
+		<span>
+			{ label }
+			if required {
+				<b class="required-mark">*</b>
+			}
+		</span>
+		<input type={ inputType } name={ name } value={ value } required?={ required } { attrs... }/>
+	</label>
+}
+
+templ NombreField(data PageData) {
+	@TextField("field field-wide", "Nombre", "text", "nombre", data.FormValues.Nombre, true, nil)
+}
+
+templ TipoPlanField(data PageData) {
+	@TextField("field", "Tipo de plan", "text", "tipo_plan", data.FormValues.TipoPlan, false, templ.Attributes{"placeholder": "Ej. Mensual, trimestral"})
+}
+
+templ FechaVtoField(data PageData) {
+	@TextField("field", "Fecha de vencimiento", "date", "fecha_vto", data.FormValues.FechaVto, false, nil)
+}
+
+templ EspecialidadField(data PageData) {
+	@TextField("field field-wide", "Especialidad", "text", "especialidad", data.FormValues.Especialidad, false, templ.Attributes{"placeholder": "Ej. Musculación, yoga"})
+}
+
+// IdentityFields son los datos de usuario que se piden al dar de alta un
+// alumno o un profesor.
+templ IdentityFields(data PageData) {
+	@TextField("field", "Nombre", "text", "nombre", data.FormValues.Nombre, true, templ.Attributes{"autocomplete": "given-name"})
+	@TextField("field", "Apellido", "text", "apellido", data.FormValues.Apellido, true, templ.Attributes{"autocomplete": "family-name"})
+	@TextField("field", "Correo electrónico", "email", "email", data.FormValues.Email, true, templ.Attributes{"autocomplete": "email"})
+	@TextField("field", "Contraseña", "password", "contrasena", "", true, templ.Attributes{"autocomplete": "new-password"})
+	@TextField("field", "Teléfono", "tel", "telefono", data.FormValues.Telefono, false, templ.Attributes{"autocomplete": "tel"})
+}
+
+// ProfesorSelect lo usan rutinas y clases.
+templ ProfesorSelect(data PageData) {
+	<label class="field">
+		<span>Profesor responsable <b class="required-mark">*</b></span>
+		<select name="profesor_id" required>
+			<option value="">Selecciona un profesor</option>
+			for _, option := range data.Options {
+				if data.FormValues.ProfesorID == stringID(option.ID) {
+					<option value={ stringID(option.ID) } selected>{ option.Label }</option>
+				} else {
+					<option value={ stringID(option.ID) }>{ option.Label }</option>
+				}
+			}
+		</select>
+		if len(data.Options) == 0 {
+			<small>Primero registra un profesor para asignarlo.</small>
+		}
+	</label>
+}
