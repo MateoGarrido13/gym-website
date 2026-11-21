@@ -26,10 +26,17 @@ func (h *Handler) editCatalog(w http.ResponseWriter, r *http.Request, kind strin
 	h.showCatalog(w, r, kind, catalogView{Values: values, Editing: true, ID: id})
 }
 
-func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind string, update bool) {
+// readCatalogForm resuelve el recurso y lee los valores del formulario. Si algo
+// falla ya responde al cliente y devuelve ok=false.
+func (h *Handler) readCatalogForm(w http.ResponseWriter, r *http.Request, kind string) (catalogResource, views.FormValues, bool) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "No se pudo leer el formulario.", http.StatusBadRequest)
-		return
+		return nil, views.FormValues{}, false
+	}
+	resource, ok := h.resourceFor(kind)
+	if !ok {
+		http.NotFound(w, r)
+		return nil, views.FormValues{}, false
 	}
 	values := views.FormValues{
 		Nombre:            strings.TrimSpace(r.FormValue("nombre")),
@@ -49,40 +56,49 @@ func (h *Handler) saveCatalog(w http.ResponseWriter, r *http.Request, kind strin
 		RutinaID:          strings.TrimSpace(r.FormValue("rutina_id")),
 		SelectedExercises: append([]string(nil), r.Form["ejercicio_id"]...),
 	}
+	return resource, values, true
+}
 
-	id := int32(0)
-	if update {
-		var err error
-		id, err = catalogID(r)
-		if err != nil {
-			http.Error(w, "El identificador no es válido.", http.StatusBadRequest)
-			return
-		}
+// showCatalogFormError vuelve a mostrar el formulario con el mensaje que
+// corresponda al error (de validación propia o del servicio).
+func (h *Handler) showCatalogFormError(w http.ResponseWriter, r *http.Request, kind string, view catalogView, err error) {
+	if ferr, isFormError := err.(*formError); isFormError {
+		view.Message, view.Status = ferr.message, ferr.status
+	} else {
+		view.Message, view.Status = catalogFormError(err)
 	}
+	h.showCatalog(w, r, kind, view)
+}
 
-	resource, ok := h.resourceFor(kind)
+func (h *Handler) createCatalog(w http.ResponseWriter, r *http.Request, kind string) {
+	resource, values, ok := h.readCatalogForm(w, r, kind)
 	if !ok {
-		http.NotFound(w, r)
 		return
 	}
-
-	if err := resource.Save(r, id, update, values); err != nil {
-		if ferr, isFormError := err.(*formError); isFormError {
-			h.showCatalog(w, r, kind, catalogView{Values: values, Editing: update, ID: id, Message: ferr.message, Status: ferr.status})
-			return
-		}
-		message, status := catalogFormError(err)
-		h.showCatalog(w, r, kind, catalogView{Values: values, Editing: update, ID: id, Message: message, Status: status})
-		return
-	}
-
-	if update {
-		// La edición sigue siendo otra página; no la tocamos para HTMX.
-		http.Redirect(w, r, catalogPathForRedirect(kind), http.StatusSeeOther)
+	if err := resource.Create(r, values); err != nil {
+		h.showCatalogFormError(w, r, kind, catalogView{Values: values}, err)
 		return
 	}
 	// HTMX: en el alta, devolvemos el fragmento de la lista actualizado en vez de redirigir.
 	h.renderList(w, r, kind, http.StatusOK)
+}
+
+func (h *Handler) updateCatalog(w http.ResponseWriter, r *http.Request, kind string) {
+	id, err := catalogID(r)
+	if err != nil {
+		http.Error(w, "El identificador no es válido.", http.StatusBadRequest)
+		return
+	}
+	resource, values, ok := h.readCatalogForm(w, r, kind)
+	if !ok {
+		return
+	}
+	if err := resource.Update(r, id, values); err != nil {
+		h.showCatalogFormError(w, r, kind, catalogView{Values: values, Editing: true, ID: id}, err)
+		return
+	}
+	// La edición sigue siendo otra página; no la tocamos para HTMX.
+	http.Redirect(w, r, catalogPathForRedirect(kind), http.StatusSeeOther)
 }
 
 func (h *Handler) deleteCatalog(w http.ResponseWriter, r *http.Request, kind string) {

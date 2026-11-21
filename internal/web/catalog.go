@@ -13,11 +13,11 @@ func (h *Handler) EditEjercicio(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateEjercicio(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "ejercicios", false)
+	h.createCatalog(w, r, "ejercicios")
 }
 
 func (h *Handler) UpdateEjercicio(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "ejercicios", true)
+	h.updateCatalog(w, r, "ejercicios")
 }
 
 func (h *Handler) DeleteEjercicio(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func (h *Handler) Alumnos(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateAlumno(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "alumnos", false)
+	h.createCatalog(w, r, "alumnos")
 }
 
 func (h *Handler) EditAlumno(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +41,7 @@ func (h *Handler) EditAlumno(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateAlumno(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "alumnos", true)
+	h.updateCatalog(w, r, "alumnos")
 }
 
 func (h *Handler) DeleteAlumno(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +53,7 @@ func (h *Handler) Profesores(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateProfesor(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "profesores", false)
+	h.createCatalog(w, r, "profesores")
 }
 
 func (h *Handler) EditProfesor(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +61,7 @@ func (h *Handler) EditProfesor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateProfesor(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "profesores", true)
+	h.updateCatalog(w, r, "profesores")
 }
 
 func (h *Handler) DeleteProfesor(w http.ResponseWriter, r *http.Request) {
@@ -77,11 +77,11 @@ func (h *Handler) EditRutina(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateRutina(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "rutinas", false)
+	h.createCatalog(w, r, "rutinas")
 }
 
 func (h *Handler) UpdateRutina(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "rutinas", true)
+	h.updateCatalog(w, r, "rutinas")
 }
 
 func (h *Handler) DeleteRutina(w http.ResponseWriter, r *http.Request) {
@@ -97,11 +97,11 @@ func (h *Handler) EditClase(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateClase(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "clases", false)
+	h.createCatalog(w, r, "clases")
 }
 
 func (h *Handler) UpdateClase(w http.ResponseWriter, r *http.Request) {
-	h.saveCatalog(w, r, "clases", true)
+	h.updateCatalog(w, r, "clases")
 }
 
 func (h *Handler) DeleteClase(w http.ResponseWriter, r *http.Request) {
