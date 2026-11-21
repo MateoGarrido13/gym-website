@@ -87,20 +87,3 @@ func validateIdentity(values views.FormValues) error {
 	}
 	return nil
 }
-
-func catalogDescription(kind string) string {
-	switch kind {
-	case "alumnos":
-		return "Registra alumnos y consulta sus datos principales."
-	case "profesores":
-		return "Registra compañeros de trabajo y consulta sus especialidades."
-	case "ejercicios":
-		return "Crea y administra el catálogo de ejercicios disponibles para las rutinas."
-	case "rutinas":
-		return "Define planes de entrenamiento y asígnalos a un profesor."
-	case "clases":
-		return "Registra clases, su capacidad y el profesor responsable."
-	default:
-		return ""
-	}
-}
