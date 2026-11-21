@@ -21,148 +21,7 @@ templ EntityForm(data PageData) {
 	<form class="server-form" method="post" action={ data.Action } if !data.IsEditing { hx-post={ data.Action }
 		hx-target="#entity-list" hx-swap="beforeend" }>
 		<div class="server-fields">
-			if data.Kind == "ejercicios" {
-			<label class="field field-wide">
-				<span>Nombre <b class="required-mark">*</b></span>
-				<input type="text" name="nombre" value={ data.FormValues.Nombre } required />
-			</label>
-			<label class="field">
-				<span>Grupo muscular <b class="required-mark">*</b></span>
-				<input type="text" name="grupo_muscular" value={ data.FormValues.GrupoMuscular }
-					placeholder="Ej. piernas, espalda" required />
-			</label>
-			<label class="field field-wide">
-				<span>Descripción</span>
-				<textarea name="descripcion" rows="3">{ data.FormValues.Descripcion }</textarea>
-			</label>
-			} else if data.Kind == "rutinas" || data.Kind == "clases" {
-			<label class="field field-wide">
-				<span>Nombre <b class="required-mark">*</b></span>
-				<input type="text" name="nombre" value={ data.FormValues.Nombre } required />
-			</label>
-			if data.Kind == "rutinas" {
-			<label class="field">
-				<span>Duración (semanas) <b class="required-mark">*</b></span>
-				<input type="number" name="duracion_semanas" min="1" value={ data.FormValues.DuracionSemanas }
-					required />
-			</label>
-			} else {
-			<label class="field">
-				<span>Cupo máximo <b class="required-mark">*</b></span>
-				<input type="number" name="max_alumnos" min="1" value={ data.FormValues.MaxAlumnos } required />
-			</label>
-			}
-			<label class="field">
-				<span>Profesor responsable <b class="required-mark">*</b></span>
-				<select name="profesor_id" required>
-					<option value="">Selecciona un profesor</option>
-					for _, option := range data.Options {
-					if data.FormValues.ProfesorID == stringID(option.ID) {
-					<option value={ stringID(option.ID) } selected>{ option.Label }</option>
-					} else {
-					<option value={ stringID(option.ID) }>{ option.Label }</option>
-					}
-					}
-				</select>
-				if len(data.Options) == 0 {
-				<small>Primero registra un profesor para asignarlo.</small>
-				}
-			</label>
-			if data.Kind == "rutinas" {
-			<fieldset class="exercise-picker field-wide">
-				<legend>Ejercicios de la rutina <b class="required-mark">*</b></legend>
-				if len(data.ExerciseOptions) == 0 {
-				<p class="field-hint">Todavía no hay ejercicios. Primero agrega registros en la sección Ejercicios.</p>
-				} else {
-				<p class="field-hint">Selecciona al menos un ejercicio. Los nuevos se agregan al final de la lista.</p>
-				<div class="exercise-options">
-					for _, option := range data.ExerciseOptions {
-					<label class="exercise-option">
-						if isSelected(data.SelectedExercises, option.ID) {
-						<input type="checkbox" name="ejercicio_id" value={ stringID(option.ID) } checked />
-						} else {
-						<input type="checkbox" name="ejercicio_id" value={ stringID(option.ID) } />
-						}
-						<span>{ option.Label }</span>
-					</label>
-					}
-				</div>
-				}
-			</fieldset>
-			}
-			} else if data.IsEditing && data.Kind == "alumnos" {
-			<label class="field">
-				<span>Tipo de plan</span>
-				<input type="text" name="tipo_plan" value={ data.FormValues.TipoPlan }
-					placeholder="Ej. Mensual, trimestral" />
-			</label>
-			<label class="field">
-				<span>Fecha de vencimiento</span>
-				<input type="date" name="fecha_vto" value={ data.FormValues.FechaVto } />
-			</label>
-			<label class="field field-wide">
-				<span>Rutina asignada</span>
-				<select name="rutina_id">
-					<option value="">Sin rutina asignada</option>
-					for _, option := range data.Options {
-					if data.FormValues.RutinaID == stringID(option.ID) {
-					<option value={ stringID(option.ID) } selected>{ option.Label }</option>
-					} else {
-					<option value={ stringID(option.ID) }>{ option.Label }</option>
-					}
-					}
-				</select>
-			</label>
-			} else if data.IsEditing && data.Kind == "profesores" {
-			<label class="field field-wide">
-				<span>Especialidad</span>
-				<input type="text" name="especialidad" value={ data.FormValues.Especialidad }
-					placeholder="Ej. Musculación, yoga" />
-			</label>
-			} else {
-			<label class="field">
-				<span>Nombre <b class="required-mark">*</b></span>
-				<input type="text" name="nombre" value={ data.FormValues.Nombre } required autocomplete="given-name" />
-			</label>
-			<label class="field">
-				<span>Apellido <b class="required-mark">*</b></span>
-				<input type="text" name="apellido" value={ data.FormValues.Apellido } required
-					autocomplete="family-name" />
-			</label>
-			<label class="field">
-				<span>Correo electrónico <b class="required-mark">*</b></span>
-				<input type="email" name="email" value={ data.FormValues.Email } required autocomplete="email" />
-			</label>
-			<label class="field">
-				<span>Contraseña <b class="required-mark">*</b></span>
-				<input type="password" name="contrasena" required autocomplete="new-password" />
-			</label>
-			<label class="field">
-				<span>Teléfono</span>
-				<input type="tel" name="telefono" value={ data.FormValues.Telefono } autocomplete="tel" />
-			</label>
-			if data.Kind == "alumnos" {
-			<label class="field">
-				<span>Fecha de inscripción <b class="required-mark">*</b></span>
-				<input type="date" name="fecha_inscripcion" value={ data.FormValues.FechaInscripcion } required />
-			</label>
-			<label class="field">
-				<span>Tipo de plan</span>
-				<input type="text" name="tipo_plan" value={ data.FormValues.TipoPlan }
-					placeholder="Ej. Mensual, trimestral" />
-			</label>
-			<label class="field">
-				<span>Fecha de vencimiento</span>
-				<input type="date" name="fecha_vto" value={ data.FormValues.FechaVto } />
-			</label>
-			} else {
-			<label class="field">
-				<span>Especialidad</span>
-				<input type="text" name="especialidad" value={ data.FormValues.Especialidad }
-					placeholder="Ej. Musculación, yoga" />
-			</label>
-			}
-			}
+			@kindFields(data)
 		</div>
 		<div class="server-form-actions">
 			if data.IsEditing {
@@ -174,4 +33,28 @@ templ EntityForm(data PageData) {
 		</div>
 	</form>
 </section>
+}
+
+// kindFields elige los campos según el kind y si es alta o edición.
+templ kindFields(data PageData) {
+	switch data.Kind {
+		case "ejercicios":
+			@EjercicioFields(data)
+		case "rutinas":
+			@RutinaFields(data)
+		case "clases":
+			@ClaseFields(data)
+		case "profesores":
+			if data.IsEditing {
+				@ProfesorEditFields(data)
+			} else {
+				@ProfesorCreateFields(data)
+			}
+		default:
+			if data.IsEditing {
+				@AlumnoEditFields(data)
+			} else {
+				@AlumnoCreateFields(data)
+			}
+	}
 }
