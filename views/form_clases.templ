@@ -1,7 +1,13 @@
 package views
 
 templ ClaseFields(data PageData) {
-	@NombreField(data)
-	@TextField("field", "Cupo máximo", "number", "max_alumnos", data.FormValues.MaxAlumnos, true, templ.Attributes{"min": "1"})
+	<label class="field field-wide">
+		<span>Nombre <b class="required-mark">*</b></span>
+		<input type="text" name="nombre" value={ data.FormValues.Nombre } required/>
+	</label>
+	<label class="field">
+		<span>Cupo máximo <b class="required-mark">*</b></span>
+		<input type="number" name="max_alumnos" min="1" value={ data.FormValues.MaxAlumnos } required/>
+	</label>
 	@ProfesorSelect(data)
 }

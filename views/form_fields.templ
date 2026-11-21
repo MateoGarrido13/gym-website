@@ -1,44 +1,42 @@
 package views
 
-// TextField es un <label> con un <input>. class permite variar el ancho
-// ("field" o "field field-wide"); attrs recibe atributos extra (placeholder,
-// autocomplete, min, ...).
-templ TextField(class, label, inputType, name, value string, required bool, attrs templ.Attributes) {
-	<label class={ class }>
-		<span>
-			{ label }
-			if required {
-				<b class="required-mark">*</b>
-			}
-		</span>
-		<input type={ inputType } name={ name } value={ value } required?={ required } { attrs... }/>
-	</label>
-}
-
-templ NombreField(data PageData) {
-	@TextField("field field-wide", "Nombre", "text", "nombre", data.FormValues.Nombre, true, nil)
-}
-
-templ TipoPlanField(data PageData) {
-	@TextField("field", "Tipo de plan", "text", "tipo_plan", data.FormValues.TipoPlan, false, templ.Attributes{"placeholder": "Ej. Mensual, trimestral"})
-}
-
-templ FechaVtoField(data PageData) {
-	@TextField("field", "Fecha de vencimiento", "date", "fecha_vto", data.FormValues.FechaVto, false, nil)
-}
-
-templ EspecialidadField(data PageData) {
-	@TextField("field field-wide", "Especialidad", "text", "especialidad", data.FormValues.Especialidad, false, templ.Attributes{"placeholder": "Ej. Musculación, yoga"})
-}
+// Bloques de formulario que se repiten en más de un kind.
 
 // IdentityFields son los datos de usuario que se piden al dar de alta un
 // alumno o un profesor.
 templ IdentityFields(data PageData) {
-	@TextField("field", "Nombre", "text", "nombre", data.FormValues.Nombre, true, templ.Attributes{"autocomplete": "given-name"})
-	@TextField("field", "Apellido", "text", "apellido", data.FormValues.Apellido, true, templ.Attributes{"autocomplete": "family-name"})
-	@TextField("field", "Correo electrónico", "email", "email", data.FormValues.Email, true, templ.Attributes{"autocomplete": "email"})
-	@TextField("field", "Contraseña", "password", "contrasena", "", true, templ.Attributes{"autocomplete": "new-password"})
-	@TextField("field", "Teléfono", "tel", "telefono", data.FormValues.Telefono, false, templ.Attributes{"autocomplete": "tel"})
+	<label class="field">
+		<span>Nombre <b class="required-mark">*</b></span>
+		<input type="text" name="nombre" value={ data.FormValues.Nombre } required autocomplete="given-name"/>
+	</label>
+	<label class="field">
+		<span>Apellido <b class="required-mark">*</b></span>
+		<input type="text" name="apellido" value={ data.FormValues.Apellido } required autocomplete="family-name"/>
+	</label>
+	<label class="field">
+		<span>Correo electrónico <b class="required-mark">*</b></span>
+		<input type="email" name="email" value={ data.FormValues.Email } required autocomplete="email"/>
+	</label>
+	<label class="field">
+		<span>Contraseña <b class="required-mark">*</b></span>
+		<input type="password" name="contrasena" required autocomplete="new-password"/>
+	</label>
+	<label class="field">
+		<span>Teléfono</span>
+		<input type="tel" name="telefono" value={ data.FormValues.Telefono } autocomplete="tel"/>
+	</label>
+}
+
+// PlanFields son los datos del plan de un alumno (alta y edición).
+templ PlanFields(data PageData) {
+	<label class="field">
+		<span>Tipo de plan</span>
+		<input type="text" name="tipo_plan" value={ data.FormValues.TipoPlan } placeholder="Ej. Mensual, trimestral"/>
+	</label>
+	<label class="field">
+		<span>Fecha de vencimiento</span>
+		<input type="date" name="fecha_vto" value={ data.FormValues.FechaVto }/>
+	</label>
 }
 
 // ProfesorSelect lo usan rutinas y clases.

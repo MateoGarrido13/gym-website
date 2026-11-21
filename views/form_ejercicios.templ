@@ -1,8 +1,14 @@
 package views
 
 templ EjercicioFields(data PageData) {
-	@NombreField(data)
-	@TextField("field", "Grupo muscular", "text", "grupo_muscular", data.FormValues.GrupoMuscular, true, templ.Attributes{"placeholder": "Ej. piernas, espalda"})
+	<label class="field field-wide">
+		<span>Nombre <b class="required-mark">*</b></span>
+		<input type="text" name="nombre" value={ data.FormValues.Nombre } required/>
+	</label>
+	<label class="field">
+		<span>Grupo muscular <b class="required-mark">*</b></span>
+		<input type="text" name="grupo_muscular" value={ data.FormValues.GrupoMuscular } placeholder="Ej. piernas, espalda" required/>
+	</label>
 	<label class="field field-wide">
 		<span>Descripción</span>
 		<textarea name="descripcion" rows="3">{ data.FormValues.Descripcion }</textarea>

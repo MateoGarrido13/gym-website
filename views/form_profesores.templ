@@ -2,9 +2,15 @@ package views
 
 templ ProfesorCreateFields(data PageData) {
 	@IdentityFields(data)
-	@TextField("field", "Especialidad", "text", "especialidad", data.FormValues.Especialidad, false, templ.Attributes{"placeholder": "Ej. Musculación, yoga"})
+	<label class="field">
+		<span>Especialidad</span>
+		<input type="text" name="especialidad" value={ data.FormValues.Especialidad } placeholder="Ej. Musculación, yoga"/>
+	</label>
 }
 
 templ ProfesorEditFields(data PageData) {
-	@EspecialidadField(data)
+	<label class="field field-wide">
+		<span>Especialidad</span>
+		<input type="text" name="especialidad" value={ data.FormValues.Especialidad } placeholder="Ej. Musculación, yoga"/>
+	</label>
 }

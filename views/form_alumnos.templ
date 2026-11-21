@@ -2,14 +2,15 @@ package views
 
 templ AlumnoCreateFields(data PageData) {
 	@IdentityFields(data)
-	@TextField("field", "Fecha de inscripción", "date", "fecha_inscripcion", data.FormValues.FechaInscripcion, true, nil)
-	@TipoPlanField(data)
-	@FechaVtoField(data)
+	<label class="field">
+		<span>Fecha de inscripción <b class="required-mark">*</b></span>
+		<input type="date" name="fecha_inscripcion" value={ data.FormValues.FechaInscripcion } required/>
+	</label>
+	@PlanFields(data)
 }
 
 templ AlumnoEditFields(data PageData) {
-	@TipoPlanField(data)
-	@FechaVtoField(data)
+	@PlanFields(data)
 	<label class="field field-wide">
 		<span>Rutina asignada</span>
 		<select name="rutina_id">

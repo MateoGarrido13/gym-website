@@ -1,8 +1,14 @@
 package views
 
 templ RutinaFields(data PageData) {
-	@NombreField(data)
-	@TextField("field", "Duración (semanas)", "number", "duracion_semanas", data.FormValues.DuracionSemanas, true, templ.Attributes{"min": "1"})
+	<label class="field field-wide">
+		<span>Nombre <b class="required-mark">*</b></span>
+		<input type="text" name="nombre" value={ data.FormValues.Nombre } required/>
+	</label>
+	<label class="field">
+		<span>Duración (semanas) <b class="required-mark">*</b></span>
+		<input type="number" name="duracion_semanas" min="1" value={ data.FormValues.DuracionSemanas } required/>
+	</label>
 	@ProfesorSelect(data)
 	<fieldset class="exercise-picker field-wide">
 		<legend>Ejercicios de la rutina <b class="required-mark">*</b></legend>
