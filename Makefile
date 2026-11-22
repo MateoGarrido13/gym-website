@@ -3,7 +3,7 @@ SQLC := $(GOBIN)/sqlc
 TEMPL := $(GOBIN)/templ
 TEMPL_VERSION := v0.3.1100
 
-.PHONY: test test-api sqlc templ generate-templ build up down reset run migrate run-app
+.PHONY: test test-api sqlc templ generate-templ build up down reset run migrate seed run-app
 
 #PATH REAL, SIN PHONY para que se chequee cada vez que se ejecuta el make
 $(SQLC):
@@ -53,6 +53,11 @@ migrate:
 	@test -n "$(FILE)" || (echo "uso: make migrate FILE=db/migration/XXXX_nombre.up.sql" && exit 1)
 	@docker compose exec -T postgres-db psql -U postgres -d tp2_db -v ON_ERROR_STOP=1 -f /opt/sql/migration/$$(basename $(FILE))
 
+# Carga los datos de desarrollo (db/seed.sql) en la base que está corriendo.
+# Es idempotente. No lo usan los tests: ellos arrancan con la base vacía.
+seed:
+	@docker compose exec -T postgres-db psql -U postgres -d tp2_db -v ON_ERROR_STOP=1 -q < db/seed.sql
+
 test: build reset
 	@make up
 	@go test ./test/... -v -count=1; \
@@ -77,4 +82,4 @@ test-api: build reset
 # y espera la base; ejecuta la app; al salir borra contenedores y volúmenes.
 run-app: build
 	@trap '$(MAKE) reset' EXIT INT TERM; \
-	$(MAKE) reset && $(MAKE) up && ./main
+	$(MAKE) reset && $(MAKE) up && $(MAKE) seed && ./main
