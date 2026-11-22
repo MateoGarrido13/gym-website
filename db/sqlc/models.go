@@ -156,6 +156,13 @@ type RutinaEjercicio struct {
 	DescansoSegundos sql.NullInt32 `json:"descanso_segundos"`
 }
 
+type Sesion struct {
+	ID        string    `json:"id"`
+	UsuarioID int32     `json:"usuario_id"`
+	ExpiraEn  time.Time `json:"expira_en"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Usuario struct {
 	ID         int32          `json:"id"`
 	Email      string         `json:"email"`

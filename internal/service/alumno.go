@@ -34,9 +34,14 @@ func (s *AlumnoService) Create(ctx context.Context, in AlumnoCreateInput) (Alumn
 		return Alumno{}, fmt.Errorf("%w: fecha_vto debe ser YYYY-MM-DD", ErrInvalid)
 	}
 
+	hash, err := hashPassword(in.Contrasena)
+	if err != nil {
+		return Alumno{}, err
+	}
+
 	row, err := s.store.CreateAlumno(ctx, db.CreateAlumnoParams{
 		Email:            email,
-		Contrasena:       in.Contrasena,
+		Contrasena:       hash,
 		Nombre:           nombre,
 		Apellido:         apellido,
 		Telefono:         toNullString(in.Telefono),

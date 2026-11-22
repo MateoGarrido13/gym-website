@@ -83,3 +83,12 @@ type InscripcionStore interface {
 	DeleteInscripcion(ctx context.Context, arg db.DeleteInscripcionParams) error
 	GetCupoDeHorario(ctx context.Context, id int32) (db.GetCupoDeHorarioRow, error)
 }
+
+// AuthStore es el puerto de persistencia de usuarios y sesiones para el login.
+type AuthStore interface {
+	GetUsuarioByEmail(ctx context.Context, email string) (db.Usuario, error)
+	CreateSesion(ctx context.Context, arg db.CreateSesionParams) error
+	GetSesionUsuario(ctx context.Context, id string) (db.GetSesionUsuarioRow, error)
+	DeleteSesion(ctx context.Context, id string) error
+	DeleteSesionesExpiradas(ctx context.Context) error
+}

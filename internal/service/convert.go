@@ -11,6 +11,11 @@ var (
 	ErrInvalid  = errors.New("datos inválidos")
 	ErrNotFound = errors.New("no encontrado")
 	ErrConflict = errors.New("conflicto")
+
+	// ErrUnauthorized cubre cualquier fallo de login o sesión inválida. El
+	// mensaje es genérico a propósito: no dice si falló el email, la
+	// contraseña o el rol.
+	ErrUnauthorized = errors.New("credenciales inválidas")
 )
 
 func fromNullString(v sql.NullString) *string {

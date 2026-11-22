@@ -24,9 +24,14 @@ func (s *ProfesorService) Create(ctx context.Context, in ProfesorCreateInput) (P
 		return Profesor{}, fmt.Errorf("%w: email, contraseña, nombre y apellido son obligatorios", ErrInvalid)
 	}
 
+	hash, err := hashPassword(in.Contrasena)
+	if err != nil {
+		return Profesor{}, err
+	}
+
 	row, err := s.store.CreateProfesor(ctx, db.CreateProfesorParams{
 		Email:        email,
-		Contrasena:   in.Contrasena,
+		Contrasena:   hash,
 		Nombre:       nombre,
 		Apellido:     apellido,
 		Telefono:     toNullString(in.Telefono),

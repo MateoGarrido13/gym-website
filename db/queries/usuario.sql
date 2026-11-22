@@ -10,6 +10,11 @@ SELECT id, email, contrasena, nombre, apellido, telefono, rol, created_at
 FROM usuario
 WHERE id = $1;
 
+-- name: GetUsuarioByEmail :one
+SELECT id, email, contrasena, nombre, apellido, telefono, rol, created_at
+FROM usuario
+WHERE email = $1;
+
 -- name: UpdateUsuario :exec
 UPDATE usuario
 SET email = $1, contrasena = $2, nombre = $3, apellido = $4, telefono = $5
