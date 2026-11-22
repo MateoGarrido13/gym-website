@@ -13,13 +13,12 @@ templ EntityForm(data PageData) {
 			}
 		</div>
 	</div>
-	if data.FormError != "" {
-	<p class="form-error" role="alert">{ data.FormError }</p>
-	}
-	<!-- Solo en alta (no edición): hx-post manda el form sin recargar, hx-target
-		     dice que la respuesta va a #entity-list, y outerHTML la reemplaza entera. -->
+	@FormError(data.FormError, false)
+	<!-- Solo en alta (no edición): hx-post manda el form sin recargar. El servidor
+		     responde con UNA fila (no la lista entera) y beforeend la appendea al
+		     final del tbody. -->
 	<form class="server-form" method="post" action={ data.Action } if !data.IsEditing { hx-post={ data.Action }
-		hx-target="#entity-list" hx-swap="beforeend" }>
+		hx-target="#entity-rows" hx-swap="beforeend" }>
 		<div class="server-fields">
 			@kindFields(data)
 		</div>
@@ -33,6 +32,14 @@ templ EntityForm(data PageData) {
 		</div>
 	</form>
 </section>
+}
+
+// FormError es el mensaje de error del formulario. EntityForm lo llama con
+// oob=false en la carga normal (no se ve si no hay mensaje); el handler de
+// alta lo llama con oob=true para avisar el error sin devolver la página
+// completa, evitando que HTMX la pegue adentro de una fila de la tabla.
+templ FormError(message string, oob bool) {
+	<p id="form-error" class="form-error" role="alert" if oob { hx-swap-oob="true" } if message == "" { hidden }>{ message }</p>
 }
 
 // kindFields elige los campos según el kind y si es alta o edición.

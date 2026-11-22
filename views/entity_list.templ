@@ -6,7 +6,7 @@ templ EntityList(data PageData) {
 		<div class="server-panel-heading">
 			<div>
 				<p class="eyebrow">REGISTROS</p>
-				<h3>Registros <span class="result-count">{ len(data.Entities) }</span></h3>
+				<h3>Registros @ResultCount(len(data.Entities), false)</h3>
 			</div>
 		</div>
 		<div class="table-wrap">
@@ -21,36 +21,58 @@ templ EntityList(data PageData) {
 						}
 					</tr>
 				</thead>
-				<tbody>
+				<!-- id fijo: es el hx-target del alta, que appendea la fila nueva al final (beforeend) -->
+				<tbody id="entity-rows">
 					if len(data.Entities) == 0 {
-						<tr><td colspan={ intString(len(data.Headers) + boolInt(data.ShowActions)) } class="table-empty">Todavía no hay registros. Usa el formulario para agregar el primero.</td></tr>
+						<tr id="empty-row"><td colspan={ intString(len(data.Headers) + boolInt(data.ShowActions)) } class="table-empty">Todavía no hay registros. Usa el formulario para agregar el primero.</td></tr>
 					} else {
 						for _, entity := range data.Entities {
-							<tr>
-								for _, value := range entity.Values {
-									<td>{ value }</td>
-								}
-								if data.ShowActions {
-									<td class="row-actions">
-										<a class="table-action" href={ entity.EditURL }>Editar</a>
-										<!-- hx-delete: manda DELETE a /<entidad>/{id} sin recargar.
-										     hx-target="closest tr": el elemento a reemplazar es la fila que contiene al botón.
-										     hx-swap="outerHTML": se reemplaza la fila entera por la respuesta (vacía) => desaparece. -->
-										<button
-											class="table-action table-action-danger"
-											type="button"
-											hx-delete={ entity.DeleteURL }
-											hx-target="closest tr"
-											hx-swap="outerHTML"
-											hx-confirm="¿Eliminar este registro?"
-										>Eliminar</button>
-									</td>
-								}
-							</tr>
+							@EntityRow(entity, data.ShowActions)
 						}
 					}
 				</tbody>
 			</table>
 		</div>
 	</section>
+}
+
+// EntityRow renderiza una sola fila. La usa EntityList (una vez por entidad)
+// y también el handler de alta, para devolver solo la fila nueva a HTMX.
+templ EntityRow(entity Entity, showActions bool) {
+	<tr>
+		for _, value := range entity.Values {
+			<td>{ value }</td>
+		}
+		if showActions {
+			<td class="row-actions">
+				<a class="table-action" href={ entity.EditURL }>Editar</a>
+				<!-- hx-delete: manda DELETE a /<entidad>/{id} sin recargar.
+				     hx-target="closest tr": el elemento a reemplazar es la fila que contiene al botón.
+				     hx-swap="outerHTML": se reemplaza la fila entera por la respuesta (vacía) => desaparece. -->
+				<button
+					class="table-action table-action-danger"
+					type="button"
+					hx-delete={ entity.DeleteURL }
+					hx-target="closest tr"
+					hx-swap="outerHTML"
+					hx-confirm="¿Eliminar este registro?"
+				>Eliminar</button>
+			</td>
+		}
+	</tr>
+}
+
+// ResultCount es el número de registros del encabezado. EntityList lo llama
+// con oob=false al cargar la página; el handler de alta lo llama con
+// oob=true para actualizarlo solo, sin volver a mandar toda la lista.
+templ ResultCount(n int, oob bool) {
+	<span id="result-count" class="result-count" if oob { hx-swap-oob="true" }>{ n }</span>
+}
+
+// ClearEmptyRow le dice a HTMX que borre la fila de "no hay registros" si
+// todavía está en el DOM. El handler de alta la manda siempre junto con la
+// fila nueva; si la fila vacía ya no estaba (ya había registros), el
+// hx-swap-oob="delete" simplemente no encuentra nada y no hace nada.
+templ ClearEmptyRow() {
+	<tr id="empty-row" hx-swap-oob="delete"></tr>
 }

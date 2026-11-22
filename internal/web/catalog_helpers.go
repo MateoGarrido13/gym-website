@@ -52,6 +52,15 @@ func catalogPathForRedirect(kind string) string {
 	return "/" + kind
 }
 
+// formMessage extrae el mensaje final y el status HTTP de un error de alta o
+// edición: los propios del formulario (&formError) o los del servicio/base.
+func formMessage(err error) (string, int) {
+	if ferr, ok := err.(*formError); ok {
+		return ferr.message, ferr.status
+	}
+	return catalogFormError(err)
+}
+
 func catalogFormError(err error) (string, int) {
 	if errors.Is(err, service.ErrInvalid) {
 		return err.Error(), http.StatusBadRequest

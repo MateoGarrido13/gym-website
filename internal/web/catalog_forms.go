@@ -60,13 +60,10 @@ func (h *Handler) readCatalogForm(w http.ResponseWriter, r *http.Request, kind s
 }
 
 // showCatalogFormError vuelve a mostrar el formulario con el mensaje que
-// corresponda al error (de validación propia o del servicio).
+// corresponda al error (de validación propia o del servicio). La usa la
+// edición, que sigue siendo una página completa, no HTMX.
 func (h *Handler) showCatalogFormError(w http.ResponseWriter, r *http.Request, kind string, view catalogView, err error) {
-	if ferr, isFormError := err.(*formError); isFormError {
-		view.Message, view.Status = ferr.message, ferr.status
-	} else {
-		view.Message, view.Status = catalogFormError(err)
-	}
+	view.Message, view.Status = formMessage(err)
 	h.showCatalog(w, r, kind, view)
 }
 
@@ -76,11 +73,12 @@ func (h *Handler) createCatalog(w http.ResponseWriter, r *http.Request, kind str
 		return
 	}
 	if err := resource.Create(r, values); err != nil {
-		h.showCatalogFormError(w, r, kind, catalogView{Values: values}, err)
+		// HTMX: solo el mensaje de error (hx-swap-oob), nunca la página completa.
+		h.renderCreateError(w, r, err)
 		return
 	}
-	// HTMX: en el alta, devolvemos el fragmento de la lista actualizado en vez de redirigir.
-	h.renderList(w, r, kind, http.StatusOK)
+	// HTMX: en el alta, devolvemos solo la fila nueva en vez de redirigir.
+	h.renderNewRow(w, r, kind)
 }
 
 func (h *Handler) updateCatalog(w http.ResponseWriter, r *http.Request, kind string) {
