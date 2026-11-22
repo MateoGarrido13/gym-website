@@ -28,7 +28,8 @@ button, input, select, textarea { font: inherit; }
     background: #24352a;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; text-decoration: none; }
-.brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 8px; color: #24352a; background: #cde9a3; font-size: 14px; }
+.brand-mark { display: grid; width: 36px; height: 36px; place-items: center; color: #cde9a3; }
+.brand-mark svg { width: 100%; height: 100%; }
 .navigation { display: grid; gap: 5px; }
 .nav-link { padding: 10px 12px; border-radius: 6px; color: #e0e7e1; text-decoration: none; }
 .nav-link:hover, .nav-link.active { color: #24352a; background: #cde9a3; }
@@ -113,18 +114,34 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 
 /* Login */
-.login-body { display: grid; min-height: 100vh; place-items: center; padding: 20px; }
-.login-card { width: min(400px, 100%); display: grid; gap: 18px; padding: 28px; }
-.login-card h1 { margin: 0; font-size: 21px; }
-.login-brand { color: #24352a; }
-.login-brand .brand-mark { color: #fff; background: var(--green); }
-.login-roles { display: grid; gap: 10px; }
-.login-switch { color: var(--muted); font-size: 14px; text-align: center; }
+.login-body { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 24px 16px; background: #24352a; }
+.login { display: flex; width: 100%; max-width: 420px; flex-direction: column; align-items: center; gap: 22px; }
+.login-brand { color: #fff; }
+.login-brand .brand-mark { width: 44px; height: 44px; }
+.login-card { display: flex; width: 100%; max-width: 420px; flex-direction: column; gap: 20px; padding: 32px 28px; box-shadow: 0 12px 32px #0000003d; }
+.login-header { display: grid; gap: 6px; text-align: center; }
+.login-header h1 { margin: 0; font-size: 24px; }
+.login-header p { margin: 0; color: var(--muted); }
+.login-header .login-role-tag { color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.login-error { margin: 0; }
+.login-roles { display: flex; flex-direction: column; gap: 12px; }
+.role-option { display: grid; gap: 2px; padding: 14px 40px 14px 16px; position: relative; border: 1px solid var(--border); border-radius: 8px; text-decoration: none; transition: border-color .15s, background-color .15s; }
+.role-option::after { content: "→"; position: absolute; top: 50%; right: 16px; color: var(--green); font-size: 18px; transform: translateY(-50%); }
+.role-option strong { color: #24352a; }
+.role-option span { color: var(--muted); font-size: 14px; }
+.role-option:hover, .role-option:focus-visible { border-color: var(--green); background: var(--green-light); outline: none; }
+.button-block { width: 100%; }
+.login-switch { color: var(--muted); font-size: 14px; text-align: center; text-decoration: none; }
+.login-switch:hover { color: var(--green); text-decoration: underline; }
+
+@media (max-width: 480px) {
+    .login-card { padding: 24px 18px; }
+}
 
 /* Vista del alumno */
 .student-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 5%; border-bottom: 1px solid var(--border); background: #fff; }
 .student-bar .brand { color: #24352a; }
-.student-bar .brand-mark { color: #fff; background: var(--green); }
+.student-bar .brand-mark { color: var(--green); }
 .student-main { display: grid; width: min(720px, 100%); gap: 16px; margin: 0 auto; padding: 24px 16px 48px; }
 .student-summary, .student-empty { padding: 20px; }
 .student-summary .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
