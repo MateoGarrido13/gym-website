@@ -157,21 +157,56 @@ Consultas en `db/queries/`: alta, lectura por id, actualización y baja de `usua
 
 Paquete `test` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. `make test` levanta un volumen nuevo y, al terminar, borra contenedores y volúmenes. **No** arranca el servidor HTTP; las pruebas de la API se corren por separado con `make test-api` (ver **API REST**).
 
+## Login y roles
+
+La app tiene dos accesos en `/login`: **entrar como profesor** y **entrar como alumno**. Cada uno valida que la cuenta tenga ese rol, y el resultado se ve distinto:
+
+- **Profesor:** entra a `/alumnos`, con el menú de gestión (alumnos, profesores, ejercicios, rutinas y clases).
+- **Alumno:** entra a `/mi-rutina`, una vista de solo lectura con su rutina asignada y sus ejercicios. Ve únicamente la suya: el alumno sale de la sesión, no de la URL.
+
+Cada rol queda limitado a lo suyo. Sin sesión, las páginas redirigen a `/login`; un alumno que pide una página de profesor vuelve a `/mi-rutina` y al revés. Un pedido HTMX sin sesión recibe `401` con `HX-Redirect: /login`.
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| `GET` | `/login` | Elegir rol; con `?rol=alumno` o `?rol=profesor`, el formulario |
+| `POST` | `/login` | Valida correo, contraseña y rol; abre la sesión y redirige |
+| `POST` | `/logout` | Cierra la sesión y borra la cookie |
+| `GET` | `/mi-rutina` | Rutina del alumno con sesión |
+
+**Sesiones.** Al entrar se crea una fila en la tabla `sesion` y el navegador recibe una cookie `session` (`HttpOnly`, `SameSite=Lax`) con un token aleatorio de 256 bits. En la base solo se guarda el SHA-256 del token, así que una filtración de la tabla no sirve para entrar. Duran 24 horas fijas, sin renovación; el logout la borra al instante y al arrancar el servidor se limpian las vencidas. Las contraseñas se guardan con bcrypt (máximo 72 bytes).
+
+La cookie lleva el flag `Secure` solo con `COOKIE_SECURE=true`. En local no hay HTTPS y el navegador la descartaría; en producción, detrás de HTTPS, debe activarse.
+
+**La API JSON (`/api/*`) no está protegida**: es para demos con curl o Postman, y no usa sesión.
+
+### Usuarios de prueba
+
+`make run-app` y `make seed` cargan `db/seed.sql` (idempotente; los tests no lo usan):
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Profesor | `profe@gym.test` | `profe1234` |
+| Alumno con rutina | `alumno@gym.test` | `alumno1234` |
+| Alumno sin rutina | `sinrutina@gym.test` | `alumno1234` |
+
+`make seed` carga los datos sobre la base que ya está corriendo, sin borrarla. Son solo para desarrollo.
+
 ## API REST
 
 Capa onion: handler HTTP → servicio → puerto. `*db.Queries` implementa los puertos. La API cubre todas las entidades del modelo.
 
 La aplicación se abre con `make run-app`, descrito en «Cómo ejecutar», y queda en `http://localhost:8080`.
 
-Las páginas de gestión se renderizan del lado del servidor con `templ`. `/` es el listado de alumnos. `/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y el formulario de alta. Los formularios usan POST tradicional y el servidor redirige con HTTP 303 (Post/Redirect/Get).
+Las páginas de gestión se renderizan del lado del servidor con `templ`. `/` solo redirige según la sesión; el listado de alumnos está en `/alumnos`. `/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y el formulario de alta. Los formularios usan POST tradicional y el servidor redirige con HTTP 303 (Post/Redirect/Get).
 
 | Método | Ruta | Qué hace |
 |---|---|---|
-| `GET` | `/` | Listado y alta de alumnos |
-| `POST` | `/alumnos` | Alta; 303 hacia `/` |
+| `GET` | `/` | Redirige: profesor a `/alumnos`, alumno a `/mi-rutina`, sin sesión a `/login` |
+| `GET` | `/alumnos` | Listado y alta de alumnos |
+| `POST` | `/alumnos` | Alta; 303 hacia `/alumnos` |
 | `GET` | `/alumnos/{id}/editar` | Formulario de edición |
-| `POST` | `/alumnos/{id}` | Guardar plan, vencimiento y rutina; 303 hacia `/` |
-| `POST` | `/alumnos/{id}/eliminar` | Baja; 303 hacia `/` |
+| `POST` | `/alumnos/{id}` | Guardar plan, vencimiento y rutina; 303 hacia `/alumnos` |
+| `POST` | `/alumnos/{id}/eliminar` | Baja; 303 hacia `/alumnos` |
 | `GET` | `/profesores` | Listado y alta |
 | `POST` | `/profesores` | Alta; 303 hacia `/profesores` |
 | `GET` | `/profesores/{id}/editar` | Formulario de edición |
