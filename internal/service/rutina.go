@@ -86,3 +86,27 @@ func (s *RutinaService) Delete(ctx context.Context, id int32) error {
 	}
 	return s.store.DeleteRutina(ctx, id)
 }
+
+// DeAlumno devuelve la rutina asignada al alumno con sus ejercicios en orden.
+// Si el alumno no tiene rutina devuelve ErrNotFound.
+func (s *RutinaService) DeAlumno(ctx context.Context, alumnoID int32) (RutinaAlumno, error) {
+	row, err := s.store.GetRutinaDeAlumno(ctx, alumnoID)
+	if err != nil {
+		return RutinaAlumno{}, mapNotFound(err)
+	}
+	items, err := s.store.ListEjerciciosDetalleDeRutina(ctx, row.ID)
+	if err != nil {
+		return RutinaAlumno{}, err
+	}
+	rutina := RutinaAlumno{
+		ID:              row.ID,
+		Nombre:          row.Nombre,
+		DuracionSemanas: row.DuracionSemanas,
+		Profesor:        row.ProfesorNombre + " " + row.ProfesorApellido,
+		Ejercicios:      make([]EjercicioDeRutina, 0, len(items)),
+	}
+	for _, item := range items {
+		rutina.Ejercicios = append(rutina.Ejercicios, fromDBEjercicioDeRutina(item))
+	}
+	return rutina, nil
+}

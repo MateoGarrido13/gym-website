@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -50,6 +51,88 @@ func (q *Queries) ClasesProfesor(ctx context.Context, profesorID int32) ([]Clase
 			&i.MaxAlumnos,
 			&i.DiaSemana,
 			&i.HoraInicio,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRutinaDeAlumno = `-- name: GetRutinaDeAlumno :one
+SELECT r.id, r.nombre, r.duracion_semanas,
+       u.nombre AS profesor_nombre, u.apellido AS profesor_apellido
+FROM alumno a
+JOIN rutina r ON r.id = a.rutina_id
+JOIN usuario u ON u.id = r.profesor_id
+WHERE a.usuario_id = $1
+`
+
+type GetRutinaDeAlumnoRow struct {
+	ID               int32  `json:"id"`
+	Nombre           string `json:"nombre"`
+	DuracionSemanas  int32  `json:"duracion_semanas"`
+	ProfesorNombre   string `json:"profesor_nombre"`
+	ProfesorApellido string `json:"profesor_apellido"`
+}
+
+// Rutina asignada a un alumno, con el nombre de su profesor. Sin filas si el
+// alumno no tiene rutina.
+func (q *Queries) GetRutinaDeAlumno(ctx context.Context, usuarioID int32) (GetRutinaDeAlumnoRow, error) {
+	row := q.db.QueryRowContext(ctx, getRutinaDeAlumno, usuarioID)
+	var i GetRutinaDeAlumnoRow
+	err := row.Scan(
+		&i.ID,
+		&i.Nombre,
+		&i.DuracionSemanas,
+		&i.ProfesorNombre,
+		&i.ProfesorApellido,
+	)
+	return i, err
+}
+
+const listEjerciciosDetalleDeRutina = `-- name: ListEjerciciosDetalleDeRutina :many
+SELECT re.orden, re.series, re.repeticiones, re.descanso_segundos,
+       e.nombre, e.descripcion, e.grupo_muscular
+FROM rutina_ejercicio re
+JOIN ejercicio e ON e.id = re.ejercicio_id
+WHERE re.rutina_id = $1
+ORDER BY re.orden
+`
+
+type ListEjerciciosDetalleDeRutinaRow struct {
+	Orden            int32          `json:"orden"`
+	Series           sql.NullInt32  `json:"series"`
+	Repeticiones     sql.NullInt32  `json:"repeticiones"`
+	DescansoSegundos sql.NullInt32  `json:"descanso_segundos"`
+	Nombre           string         `json:"nombre"`
+	Descripcion      sql.NullString `json:"descripcion"`
+	GrupoMuscular    sql.NullString `json:"grupo_muscular"`
+}
+
+func (q *Queries) ListEjerciciosDetalleDeRutina(ctx context.Context, rutinaID int32) ([]ListEjerciciosDetalleDeRutinaRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEjerciciosDetalleDeRutina, rutinaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListEjerciciosDetalleDeRutinaRow
+	for rows.Next() {
+		var i ListEjerciciosDetalleDeRutinaRow
+		if err := rows.Scan(
+			&i.Orden,
+			&i.Series,
+			&i.Repeticiones,
+			&i.DescansoSegundos,
+			&i.Nombre,
+			&i.Descripcion,
+			&i.GrupoMuscular,
 		); err != nil {
 			return nil, err
 		}

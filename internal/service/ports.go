@@ -45,6 +45,9 @@ type RutinaStore interface {
 	ListRutinas(ctx context.Context) ([]db.Rutina, error)
 	UpdateRutina(ctx context.Context, arg db.UpdateRutinaParams) error
 	DeleteRutina(ctx context.Context, id int32) error
+	// Vista del alumno: su rutina asignada y el detalle de sus ejercicios.
+	GetRutinaDeAlumno(ctx context.Context, usuarioID int32) (db.GetRutinaDeAlumnoRow, error)
+	ListEjerciciosDetalleDeRutina(ctx context.Context, rutinaID int32) ([]db.ListEjerciciosDetalleDeRutinaRow, error)
 }
 
 // RutinaEjercicioStore es el puerto de la tabla intermedia rutina_ejercicio.
