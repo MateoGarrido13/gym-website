@@ -12,7 +12,8 @@ WHERE id = $1;
 
 -- name: ListEjercicios :many
 SELECT id, nombre, descripcion, grupo_muscular
-FROM ejercicio;
+FROM ejercicio
+ORDER BY id;
 
 -- name: UpdateEjercicio :exec
 UPDATE ejercicio

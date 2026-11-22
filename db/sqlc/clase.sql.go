@@ -119,6 +119,7 @@ func (q *Queries) GetClaseHorario(ctx context.Context, id int32) (ClaseHorario, 
 const listClases = `-- name: ListClases :many
 SELECT id, nombre, max_alumnos, profesor_id
 FROM clase
+ORDER BY id
 `
 
 func (q *Queries) ListClases(ctx context.Context) ([]Clase, error) {

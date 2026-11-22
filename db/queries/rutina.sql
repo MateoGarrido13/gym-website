@@ -12,7 +12,8 @@ WHERE id = $1;
 
 -- name: ListRutinas :many
 SELECT id, nombre, duracion_semanas, profesor_id
-FROM rutina;
+FROM rutina
+ORDER BY id;
 
 -- name: UpdateRutina :exec
 UPDATE rutina

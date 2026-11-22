@@ -145,6 +145,7 @@ func (q *Queries) ListRutinaEjercicios(ctx context.Context, rutinaID int32) ([]R
 const listRutinas = `-- name: ListRutinas :many
 SELECT id, nombre, duracion_semanas, profesor_id
 FROM rutina
+ORDER BY id
 `
 
 func (q *Queries) ListRutinas(ctx context.Context) ([]Rutina, error) {

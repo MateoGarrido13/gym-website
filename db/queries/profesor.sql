@@ -17,7 +17,8 @@ SELECT
     u.id, u.email, u.nombre, u.apellido, u.telefono, u.rol, u.created_at,
     p.especialidad
 FROM usuario u
-JOIN profesor p ON u.id = p.usuario_id;
+JOIN profesor p ON u.id = p.usuario_id
+ORDER BY u.id;
 
 -- name: UpdateProfesor :exec
 UPDATE profesor

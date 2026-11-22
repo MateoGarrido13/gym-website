@@ -69,6 +69,7 @@ SELECT
     p.especialidad
 FROM usuario u
 JOIN profesor p ON u.id = p.usuario_id
+ORDER BY u.id
 `
 
 type ListProfesoresCompletosRow struct {

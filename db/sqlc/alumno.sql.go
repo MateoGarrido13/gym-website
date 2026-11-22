@@ -85,6 +85,7 @@ SELECT
     a.fecha_inscripcion, a.fecha_vto, a.tipo_plan, a.rutina_id
 FROM usuario u
 JOIN alumno a ON u.id = a.usuario_id
+ORDER BY u.id
 `
 
 type ListAlumnosCompletosRow struct {

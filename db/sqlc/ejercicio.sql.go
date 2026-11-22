@@ -67,6 +67,7 @@ func (q *Queries) GetEjercicio(ctx context.Context, id int32) (Ejercicio, error)
 const listEjercicios = `-- name: ListEjercicios :many
 SELECT id, nombre, descripcion, grupo_muscular
 FROM ejercicio
+ORDER BY id
 `
 
 func (q *Queries) ListEjercicios(ctx context.Context) ([]Ejercicio, error) {

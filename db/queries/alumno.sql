@@ -17,7 +17,8 @@ SELECT
     u.id, u.email, u.nombre, u.apellido, u.telefono, u.rol, u.created_at,
     a.fecha_inscripcion, a.fecha_vto, a.tipo_plan, a.rutina_id
 FROM usuario u
-JOIN alumno a ON u.id = a.usuario_id;
+JOIN alumno a ON u.id = a.usuario_id
+ORDER BY u.id;
 
 -- name: UpdateAlumnoDetalles :exec
 UPDATE alumno

@@ -12,7 +12,8 @@ WHERE id = $1;
 
 -- name: ListClases :many
 SELECT id, nombre, max_alumnos, profesor_id
-FROM clase;
+FROM clase
+ORDER BY id;
 
 -- name: UpdateClase :exec
 UPDATE clase
