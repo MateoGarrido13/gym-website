@@ -1,6 +1,6 @@
 package views
 
-templ Layout(title string, active string) {
+templ Layout(title string, active string, userName string) {
 <!doctype html>
 <html lang="es">
 
@@ -23,7 +23,7 @@ templ Layout(title string, active string) {
 				<span>Gym Web</span>
 			</a>
 			<nav class="navigation" aria-label="Navegación principal">
-				<a class={ navClass(active, "alumnos" ) } href="/">Alumnos</a>
+				<a class={ navClass(active, "alumnos" ) } href="/alumnos">Alumnos</a>
 				<a class={ navClass(active, "profesores" ) } href="/profesores">Profesores</a>
 				<a class={ navClass(active, "ejercicios" ) } href="/ejercicios">Ejercicios</a>
 				<a class={ navClass(active, "rutinas" ) } href="/rutinas">Rutinas</a>
@@ -33,6 +33,14 @@ templ Layout(title string, active string) {
 		<main class="workspace">
 			<header class="topbar">
 				<h1>{ title }</h1>
+				if userName != "" {
+					<div class="topbar-user">
+						<span>{ userName }</span>
+						<form method="post" action="/logout">
+							<button class="button button-secondary" type="submit">Salir</button>
+						</form>
+					</div>
+				}
 			</header>
 			<div class="page-content">
 				{ children... }

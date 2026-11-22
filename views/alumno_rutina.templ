@@ -1,0 +1,65 @@
+package views
+
+// AlumnoRutinaPage es la vista del alumno: su rutina y nada más. Tiene su
+// propio marco liviano, sin el menú de administración del profesor.
+templ AlumnoRutinaPage(data RutinaAlumnoData) {
+	<!doctype html>
+	<html lang="es">
+		@simpleHead("Mi rutina")
+		<body>
+			<header class="student-bar">
+				<a class="brand" href="/mi-rutina" aria-label="Gym Web">
+					<span class="brand-mark">GW</span>
+					<span>Gym Web</span>
+				</a>
+				<div class="topbar-user">
+					<span>{ data.UserName }</span>
+					<form method="post" action="/logout">
+						<button class="button button-secondary" type="submit">Salir</button>
+					</form>
+				</div>
+			</header>
+			<main class="student-main">
+				if data.Nombre == "" {
+					<section class="panel student-empty">
+						<h1>Mi rutina</h1>
+						<p>Todavía no tienes una rutina asignada. Consulta con tu profesor.</p>
+					</section>
+				} else {
+					<section class="panel student-summary">
+						<p class="eyebrow">MI RUTINA</p>
+						<h1>{ data.Nombre }</h1>
+						<p class="student-meta">{ data.Duracion } · Profesor: { data.Profesor }</p>
+					</section>
+					if len(data.Ejercicios) == 0 {
+						<section class="panel student-empty">
+							<p>Esta rutina todavía no tiene ejercicios cargados.</p>
+						</section>
+					} else {
+						<ol class="exercise-list">
+							for _, e := range data.Ejercicios {
+								<li class="panel exercise-card">
+									<div class="exercise-head">
+										<h2>{ e.Nombre }</h2>
+										if e.Grupo != "" {
+											<span class="exercise-tag">{ e.Grupo }</span>
+										}
+									</div>
+									if e.Esquema != "" {
+										<p class="exercise-scheme">{ e.Esquema }</p>
+									}
+									if e.Descanso != "" {
+										<p class="exercise-rest">{ e.Descanso }</p>
+									}
+									if e.Descripcion != "" {
+										<p class="exercise-desc">{ e.Descripcion }</p>
+									}
+								</li>
+							}
+						</ol>
+					}
+				}
+			</main>
+		</body>
+	</html>
+}

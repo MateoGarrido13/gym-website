@@ -36,7 +36,10 @@ button, input, select, textarea { font: inherit; }
 
 .workspace { min-height: 100vh; margin-left: 220px; }
 .topbar { padding: 24px 5%; border-bottom: 1px solid var(--border); background: #fff; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .topbar h1 { margin: 0; font-size: 24px; }
+.topbar-user { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; }
+.topbar-user .button { min-height: 34px; }
 .page-content { width: min(1200px, 100%); margin: 0 auto; padding: 28px 5% 48px; }
 .server-page-grid { display: grid; gap: 20px; }
 .panel { min-width: 0; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
@@ -108,3 +111,33 @@ tbody tr:last-child td { border-bottom: 0; }
     .server-form-actions { flex-wrap: wrap; }
     .server-form-actions .button { flex: 1; }
 }
+
+/* Login */
+.login-body { display: grid; min-height: 100vh; place-items: center; padding: 20px; }
+.login-card { width: min(400px, 100%); display: grid; gap: 18px; padding: 28px; }
+.login-card h1 { margin: 0; font-size: 21px; }
+.login-brand { color: #24352a; }
+.login-brand .brand-mark { color: #fff; background: var(--green); }
+.login-roles { display: grid; gap: 10px; }
+.login-switch { color: var(--muted); font-size: 14px; text-align: center; }
+
+/* Vista del alumno */
+.student-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 5%; border-bottom: 1px solid var(--border); background: #fff; }
+.student-bar .brand { color: #24352a; }
+.student-bar .brand-mark { color: #fff; background: var(--green); }
+.student-main { display: grid; width: min(720px, 100%); gap: 16px; margin: 0 auto; padding: 24px 16px 48px; }
+.student-summary, .student-empty { padding: 20px; }
+.student-summary .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.student-summary h1, .student-empty h1 { margin: 0; font-size: 24px; }
+.student-meta { margin: 8px 0 0; color: var(--muted); }
+.student-empty p { margin: 0; color: var(--muted); }
+.student-empty h1 + p { margin-top: 8px; }
+.exercise-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: ejercicio; }
+.exercise-card { position: relative; padding: 16px 16px 16px 56px; counter-increment: ejercicio; }
+.exercise-card::before { content: counter(ejercicio); position: absolute; top: 16px; left: 16px; display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; color: #24352a; background: #cde9a3; font-size: 14px; font-weight: 700; }
+.exercise-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.exercise-head h2 { margin: 0; font-size: 17px; }
+.exercise-tag { padding: 2px 8px; border-radius: 999px; color: var(--green); background: var(--green-light); font-size: 12px; font-weight: 700; }
+.exercise-card p { margin: 6px 0 0; }
+.exercise-scheme { font-weight: 700; }
+.exercise-rest, .exercise-desc { color: var(--muted); font-size: 14px; }

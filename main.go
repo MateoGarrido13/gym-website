@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
@@ -41,7 +42,12 @@ func main() {
 	clases := service.NewClaseService(queries)
 	clases_horario := service.NewClaseHorarioService(queries)
 	inscripciones := service.NewInscripcionService(queries)
-	router := handler.NewRouter(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, "./static")
+	auth := service.NewAuthService(queries)
+	// Borra las sesiones vencidas que quedaron de corridas anteriores.
+	if err := auth.LimpiarExpiradas(context.Background()); err != nil {
+		log.Printf("no se pudieron limpiar las sesiones vencidas: %v", err)
+	}
+	router := handler.NewRouter(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, auth, "./static")
 
 	port := os.Getenv("PORT")
 	if port == "" {

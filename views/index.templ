@@ -1,7 +1,7 @@
 package views
 
 templ IndexPage(data PageData) {
-	@Layout(data.Title, data.Active) {
+	@Layout(data.Title, data.Active, data.UserName) {
 		<div class="server-page-grid">
 			@EntityForm(data)
 			@EntityList(data)

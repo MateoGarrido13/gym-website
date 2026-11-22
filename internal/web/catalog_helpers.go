@@ -49,9 +49,6 @@ func optionalPositiveInt32(value, message string) (*int32, error) {
 }
 
 func catalogPathForRedirect(kind string) string {
-	if kind == "alumnos" {
-		return "/"
-	}
 	return "/" + kind
 }
 

@@ -29,9 +29,6 @@ func stringID(id int32) string {
 }
 
 func catalogPath(kind string) string {
-	if kind == "alumnos" {
-		return "/"
-	}
 	return "/" + kind
 }
 

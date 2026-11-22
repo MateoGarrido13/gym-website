@@ -1,0 +1,43 @@
+package views
+
+// LoginPage es independiente de Layout: no lleva el menú de administración.
+// Sin rol elegido muestra los dos accesos; con rol, el formulario de ese rol.
+templ LoginPage(data LoginData) {
+	<!doctype html>
+	<html lang="es">
+		@simpleHead("Entrar")
+		<body class="login-body">
+			<main class="login-card panel">
+				<a class="brand login-brand" href="/login" aria-label="Gym Web">
+					<span class="brand-mark">GW</span>
+					<span>Gym Web</span>
+				</a>
+				if data.Error != "" {
+					<p class="form-error" role="alert">{ data.Error }</p>
+				}
+				if data.Rol == "" {
+					<h1>¿Cómo quieres entrar?</h1>
+					<div class="login-roles">
+						<a class="button button-primary" href="/login?rol=profesor">Entrar como profesor</a>
+						<a class="button button-secondary" href="/login?rol=alumno">Entrar como alumno</a>
+					</div>
+				} else {
+					<h1>Entrar como { data.Rol }</h1>
+					<form class="server-form" method="post" action="/login">
+						<input type="hidden" name="rol" value={ data.Rol }/>
+						<label class="field">
+							Correo electrónico
+							<input type="email" name="email" value={ data.Email } autocomplete="username" required autofocus/>
+						</label>
+						<label class="field">
+							Contraseña
+							<input type="password" name="contrasena" autocomplete="current-password" required/>
+						</label>
+						<button class="button button-primary" type="submit">Entrar</button>
+					</form>
+					<a class="login-switch" href="/login">Cambiar de rol</a>
+				}
+			</main>
+		</body>
+	</html>
+}

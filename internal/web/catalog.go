@@ -1,6 +1,7 @@
 package web
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -24,11 +25,28 @@ func (h *Handler) DeleteEjercicio(w http.ResponseWriter, r *http.Request) {
 	h.deleteCatalog(w, r, "ejercicios")
 }
 
-func (h *Handler) Alumnos(w http.ResponseWriter, r *http.Request) {
+// Home es el punto de entrada ("/"): no muestra contenido, solo redirige según
+// la sesión (profesor → /alumnos, alumno → /mi-rutina, sin sesión → /login).
+// GET / captura toda ruta no registrada, por eso devuelve 404 si no es "/".
+func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
+	user, ok, err := h.currentUser(r)
+	if err != nil {
+		log.Printf("no se pudo verificar la sesión: %v", err)
+		http.Error(w, "No se pudo verificar la sesión.", http.StatusInternalServerError)
+		return
+	}
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, homeFor(user.Rol), http.StatusSeeOther)
+}
+
+func (h *Handler) Alumnos(w http.ResponseWriter, r *http.Request) {
 	h.showCatalog(w, r, "alumnos", catalogView{})
 }
 

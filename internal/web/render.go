@@ -36,6 +36,9 @@ func (h *Handler) renderList(w http.ResponseWriter, r *http.Request, kind string
 }
 
 func (h *Handler) renderStatus(w http.ResponseWriter, r *http.Request, page views.PageData, status int) {
+	if user, ok := UserFrom(r.Context()); ok {
+		page.UserName = user.Nombre + " " + user.Apellido
+	}
 	var output bytes.Buffer
 	if err := views.IndexPage(page).Render(r.Context(), &output); err != nil {
 		log.Printf("no se pudo renderizar la página %q: %v", page.Title, err)
@@ -46,5 +49,33 @@ func (h *Handler) renderStatus(w http.ResponseWriter, r *http.Request, page view
 	w.WriteHeader(status)
 	if _, err := output.WriteTo(w); err != nil {
 		log.Printf("no se pudo escribir la página %q: %v", page.Title, err)
+	}
+}
+
+func (h *Handler) renderLogin(w http.ResponseWriter, r *http.Request, data views.LoginData, status int) {
+	var output bytes.Buffer
+	if err := views.LoginPage(data).Render(r.Context(), &output); err != nil {
+		log.Printf("no se pudo renderizar el login: %v", err)
+		http.Error(w, "No se pudo renderizar la página.", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	if _, err := output.WriteTo(w); err != nil {
+		log.Printf("no se pudo escribir el login: %v", err)
+	}
+}
+
+func (h *Handler) renderAlumnoRutina(w http.ResponseWriter, r *http.Request, data views.RutinaAlumnoData) {
+	var output bytes.Buffer
+	if err := views.AlumnoRutinaPage(data).Render(r.Context(), &output); err != nil {
+		log.Printf("no se pudo renderizar la rutina del alumno: %v", err)
+		http.Error(w, "No se pudo renderizar la página.", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if _, err := output.WriteTo(w); err != nil {
+		log.Printf("no se pudo escribir la rutina del alumno: %v", err)
 	}
 }
