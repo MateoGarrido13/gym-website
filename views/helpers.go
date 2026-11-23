@@ -1,6 +1,9 @@
 package views
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 func navClass(active, page string) string {
 	if active == page {
@@ -41,6 +44,18 @@ func boolInt(value bool) int {
 		return 1
 	}
 	return 0
+}
+
+func alumnosPageHref(limit, offset int) string {
+	return fmt.Sprintf("/alumnos?limit=%d&offset=%d", limit, offset)
+}
+
+func previousOffset(offset, limit int) int {
+	prev := offset - limit
+	if prev < 0 {
+		return 0
+	}
+	return prev
 }
 
 func isSelected(values []string, value int32) bool {

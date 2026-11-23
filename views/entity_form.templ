@@ -14,9 +14,9 @@ templ EntityForm(data PageData) {
 		</div>
 	</div>
 	@FormError(data.FormError, false)
-	<!-- Solo en alta (no edición): hx-post manda el form sin recargar. El servidor
-		     responde con UNA fila (no la lista entera) y beforeend la appendea al
-		     final del tbody. -->
+	<!-- Solo en alta (no edición): hx-post manda el form sin recargar.
+	     Alumnos responde con HX-Redirect a su página ordenada. El resto
+	     responde con una fila y beforeend la agrega al final del tbody. -->
 	<form class="server-form" method="post" action={ data.Action } if !data.IsEditing { hx-post={ data.Action }
 		hx-target="#entity-rows" hx-swap="beforeend" }>
 		<div class="server-fields">

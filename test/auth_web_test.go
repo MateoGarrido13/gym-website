@@ -1,15 +1,20 @@
 package test
 
 import (
+	db "PRACTICO_DOS/db/sqlc"
 	"PRACTICO_DOS/internal/handler"
 	"PRACTICO_DOS/internal/service"
 	"PRACTICO_DOS/internal/web"
+	"PRACTICO_DOS/views"
+	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 func nuevoRouterDePrueba() http.Handler {
@@ -340,5 +345,136 @@ func TestPermisosPorRol(t *testing.T) {
 	if !strings.Contains(adm, `href="/alumnos"`) || strings.Contains(adm, `href="/rutinas"`) ||
 		strings.Contains(adm, `href="/clases"`) || strings.Contains(adm, `href="/ejercicios"`) {
 		t.Error("el menú del administrador debe tener Alumnos y Profesores, y nada más")
+	}
+}
+
+func TestAlumnosListPlantilla(t *testing.T) {
+	data := views.PageData{
+		Headers:     []string{"NOMBRE"},
+		ShowActions: true,
+		Total:       25,
+		Limit:       10,
+		Offset:      10,
+		Entities: []views.Entity{{
+			Values:    []string{"Ana Perez"},
+			EditURL:   "/alumnos/3/editar",
+			DeleteURL: "/alumnos/3",
+		}},
+	}
+	var buf bytes.Buffer
+	if err := views.AlumnosList(data).Render(ctx, &buf); err != nil {
+		t.Fatalf("no se pudo renderizar el listado de alumnos: %v", err)
+	}
+	body := buf.String()
+	if !strings.Contains(body, `class="result-count">25`) {
+		t.Fatal("el encabezado debe mostrar el total, no el tamaño de la página")
+	}
+	if !strings.Contains(body, "Ana Perez") {
+		t.Fatal("falta la fila de la página")
+	}
+	if !strings.Contains(body, `href="/alumnos?limit=10&amp;offset=0"`) || !strings.Contains(body, ">Anterior<") {
+		t.Fatal("falta el enlace a la página anterior")
+	}
+	if !strings.Contains(body, `href="/alumnos?limit=10&amp;offset=20"`) || !strings.Contains(body, ">Siguiente<") {
+		t.Fatal("falta el enlace a la página siguiente")
+	}
+
+	var compartida bytes.Buffer
+	if err := views.EntityList(data).Render(ctx, &compartida); err != nil {
+		t.Fatalf("no se pudo renderizar el listado compartido: %v", err)
+	}
+	if strings.Contains(compartida.String(), `class="pager"`) {
+		t.Fatal("el listado compartido no debe incluir la paginación de alumnos")
+	}
+}
+
+func TestListadoAlumnosPaginado(t *testing.T) {
+	if _, err := dbConn.ExecContext(ctx, "SELECT 1 FROM sesion LIMIT 0"); err != nil {
+		t.Skip("esta base no tiene la tabla sesion")
+	}
+	router := nuevoRouterDePrueba()
+	_, email := crearUsuarioConClave(t, service.RolProfesor, "secret123")
+	cookie := cookieDeSesion(postLogin(router, email, "secret123", service.RolProfesor))
+	if cookie == nil {
+		t.Fatal("no se obtuvo la cookie del profesor")
+	}
+
+	total, err := queries.CountAlumnos(ctx)
+	if err != nil {
+		t.Fatalf("count: %v", err)
+	}
+	primera, err := queries.ListAlumnosPagina(ctx, db.ListAlumnosPaginaParams{Limit: 10, Offset: 0})
+	if err != nil {
+		t.Fatalf("primera página: %v", err)
+	}
+
+	rec := pedirConCookie(router, http.MethodGet, "/alumnos?limit=50&offset=-4", cookie, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d, se esperaba 200", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, fmt.Sprintf(`class="result-count">%d`, total)) {
+		t.Fatalf("el encabezado no muestra el total %d", total)
+	}
+	for _, alumno := range primera {
+		if !strings.Contains(body, alumno.Email) {
+			t.Errorf("falta %s en la primera página", alumno.Email)
+		}
+	}
+	if total > 10 {
+		segunda, err := queries.ListAlumnosPagina(ctx, db.ListAlumnosPaginaParams{Limit: 1, Offset: 10})
+		if err != nil {
+			t.Fatalf("segunda página: %v", err)
+		}
+		if len(segunda) != 1 {
+			t.Fatalf("se esperaba el alumno de offset 10, llegó %d", len(segunda))
+		}
+		if strings.Contains(body, segunda[0].Email) {
+			t.Errorf("la primera página incluye %s, que pertenece a offset 10", segunda[0].Email)
+		}
+		if !strings.Contains(body, `href="/alumnos?limit=10&amp;offset=10"`) {
+			t.Fatal("falta el enlace Siguiente con limit=10 y offset=10")
+		}
+	} else if strings.Contains(body, `class="pager"`) {
+		t.Fatal("con 10 o menos alumnos no debe mostrarse el paginador")
+	}
+
+	_, emailAdmin := crearUsuarioConClave(t, service.RolAdmin, "secret123")
+	admin := cookieDeSesion(postLogin(router, emailAdmin, "secret123", service.RolAdmin))
+	profesores := pedirConCookie(router, http.MethodGet, "/profesores", admin, nil)
+	if profesores.Code != http.StatusOK || strings.Contains(profesores.Body.String(), `class="pager"`) {
+		t.Fatalf("status %d; el listado de profesores no debe paginarse", profesores.Code)
+	}
+
+	marca := time.Now().UnixNano()
+	nuevoEmail := fmt.Sprintf("pagina-%d@example.com", marca)
+	form := url.Values{
+		"nombre":            {fmt.Sprintf("Zzpag%d", marca)},
+		"apellido":          {"Zulu"},
+		"email":             {nuevoEmail},
+		"contrasena":        {"secret123"},
+		"fecha_inscripcion": {"2026-09-10"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/alumnos", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("HX-Request", "true")
+	req.AddCookie(cookie)
+	alta := httptest.NewRecorder()
+	router.ServeHTTP(alta, req)
+
+	creado, err := queries.GetUsuarioByEmail(ctx, nuevoEmail)
+	if err != nil {
+		t.Fatalf("el alta no creó el alumno: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = queries.DeleteUsuario(ctx, creado.ID)
+	})
+	antes, err := queries.CountAlumnosAntesDe(ctx, creado.ID)
+	if err != nil {
+		t.Fatalf("conteo anterior: %v", err)
+	}
+	esperado := fmt.Sprintf("/alumnos?limit=10&offset=%d", (antes/10)*10)
+	if alta.Code != http.StatusOK || alta.Header().Get("HX-Redirect") != esperado {
+		t.Fatalf("status %d, HX-Redirect %q; se esperaba 200 y %q", alta.Code, alta.Header().Get("HX-Redirect"), esperado)
 	}
 }

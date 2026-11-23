@@ -37,6 +37,12 @@ type catalogResource interface {
 	Delete(r *http.Request, id int32) error
 }
 
+// pagedCatalog completa el total y la ventana limit/offset del listado.
+// Solo lo implementa alumnos.
+type pagedCatalog interface {
+	ApplyPage(r *http.Request, page *views.PageData) error
+}
+
 // formError representa un error de validación propio del formulario, con su
 // mensaje final para el usuario y el status HTTP a devolver.
 type formError struct {

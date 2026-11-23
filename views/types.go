@@ -52,6 +52,10 @@ type PageData struct {
 	SelectedExercises []string
 	UserName          string // usuario con sesión; vacío si no hay
 	UserRol           string // rol del usuario; decide qué menú se muestra
+	Paged             bool   // true solo en el listado paginado de alumnos
+	Total             int    // total de registros; el encabezado lo muestra si Paged
+	Limit             int
+	Offset            int
 }
 
 // LoginData alimenta la pantalla de login. Rol vacío significa "todavía no

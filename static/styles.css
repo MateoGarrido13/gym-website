@@ -82,6 +82,7 @@ button, input, select, textarea { font: inherit; }
 .button-secondary:hover { color: #34582e; background: var(--green-light); }
 
 .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 5px; }
+.pager { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th, td { padding: 11px 13px; border-bottom: 1px solid #e8ede9; white-space: nowrap; }
 th { color: #435147; background: #f4f7f4; font-size: 12px; }

@@ -75,7 +75,7 @@ func EntityForm(data PageData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<!-- Solo en alta (no edición): hx-post manda el form sin recargar. El servidor\n\t\t     responde con UNA fila (no la lista entera) y beforeend la appendea al\n\t\t     final del tbody. --><form class=\"server-form\" method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<!-- Solo en alta (no edición): hx-post manda el form sin recargar.\n\t     Alumnos responde con HX-Redirect a su página ordenada. El resto\n\t     responde con una fila y beforeend la agrega al final del tbody. --><form class=\"server-form\" method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,6 +1,8 @@
 package web
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -72,6 +74,10 @@ func (h *Handler) createCatalog(w http.ResponseWriter, r *http.Request, kind str
 	if !ok {
 		return
 	}
+	if kind == "alumnos" {
+		h.createAlumno(w, r, values)
+		return
+	}
 	if err := resource.Create(r, values); err != nil {
 		// HTMX: solo el mensaje de error (hx-swap-oob), nunca la página completa.
 		h.renderCreateError(w, r, err)
@@ -79,6 +85,30 @@ func (h *Handler) createCatalog(w http.ResponseWriter, r *http.Request, kind str
 	}
 	// HTMX: en el alta, devolvemos solo la fila nueva en vez de redirigir.
 	h.renderNewRow(w, r, kind)
+}
+
+// createAlumno redirige a la página donde el nuevo queda según
+// (nombre, apellido, id). Appendear la fila al final rompería ese orden.
+func (h *Handler) createAlumno(w http.ResponseWriter, r *http.Request, values views.FormValues) {
+	alumno, err := (alumnosResource{h}).insert(r, values)
+	if err != nil {
+		h.renderCreateError(w, r, err)
+		return
+	}
+	antes, err := h.alumnos.CountAntes(r.Context(), alumno.ID)
+	if err != nil {
+		log.Printf("no se pudo ubicar la página del alumno %d: %v", alumno.ID, err)
+		http.Error(w, "No se pudo cargar el registro nuevo.", http.StatusInternalServerError)
+		return
+	}
+	offset := (antes / alumnosPorPagina) * alumnosPorPagina
+	loc := fmt.Sprintf("/alumnos?limit=%d&offset=%d", alumnosPorPagina, offset)
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", loc)
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Redirect(w, r, loc, http.StatusSeeOther)
 }
 
 func (h *Handler) updateCatalog(w http.ResponseWriter, r *http.Request, kind string) {

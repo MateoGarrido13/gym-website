@@ -15,8 +15,9 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, page views.Page
 // renderNewRow renderiza la fila del registro recién creado, más dos
 // fragmentos hx-swap-oob en la misma respuesta: el contador actualizado y
 // la orden de borrar la fila de "vacío" (si ya no está, no hace nada).
-// Vuelve a listar "kind" (ya ordenado por id, ver db/queries/*.sql) y toma
-// la última entidad, que es la nueva.
+// Vuelve a listar el catálogo, ordenado por id, y toma la última entidad,
+// que es la nueva. Alumnos no usa este camino: su alta redirige a la página
+// del orden (nombre, apellido, id).
 func (h *Handler) renderNewRow(w http.ResponseWriter, r *http.Request, kind string) {
 	resource, ok := h.resourceFor(kind)
 	if !ok {

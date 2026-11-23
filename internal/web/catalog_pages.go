@@ -58,6 +58,12 @@ func (h *Handler) catalogPage(r *http.Request, kind string, view catalogView) (v
 	}
 	page.Entities = entities
 
+	if paged, ok := resource.(pagedCatalog); ok {
+		if err := paged.ApplyPage(r, &page); err != nil {
+			return page, err
+		}
+	}
+
 	if err := resource.FormOptions(r, &page, view.Values, view.Editing); err != nil {
 		return page, err
 	}

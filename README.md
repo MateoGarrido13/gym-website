@@ -152,11 +152,11 @@ erDiagram
 | `clase_horario` | Día de la semana y hora |
 | `inscripcion_clase` | Alumno inscripto a un horario |
 
-Consultas en `db/queries/`: alta, lectura por id, actualización y baja de `usuario` (sin listado); CRUD de ejercicio, rutina y clase; alta, ficha, listado y actualización de profesor y de alumno. La baja de alumno y de profesor es `DeleteUsuario`. Horarios e inscripciones tienen alta, listado y baja. Los joins de ejercicios de una rutina, clases de un profesor y profesores de un día están en `db/queries/multitabla.sql` y en `test/`; solo el de ejercicios de una rutina tiene ruta HTTP (`GET /api/rutinas/{id}/ejercicios`).
+Consultas en `db/queries/`: alta, lectura por id, actualización y baja de `usuario` (sin listado); CRUD de ejercicio, rutina y clase; alta, ficha, listado y actualización de profesor y de alumno. La baja de alumno y de profesor es `DeleteUsuario`. El listado de la página `/alumnos` es `ListAlumnosPagina`: orden `(nombre, apellido, id)` con `LIMIT` y `OFFSET`. `ListAlumnosCompletos` sigue ordenado por id y lo usa `GET /api/alumnos`. Horarios e inscripciones tienen alta, listado y baja. Los joins de ejercicios de una rutina, clases de un profesor y profesores de un día están en `db/queries/multitabla.sql` y en `test/`; solo el de ejercicios de una rutina tiene ruta HTTP (`GET /api/rutinas/{id}/ejercicios`).
 
 ## Tests
 
-Paquete `test` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. `make test` levanta un volumen nuevo y, al terminar, borra contenedores y volúmenes. **No** arranca el servidor HTTP; las pruebas de la API se corren por separado con `make test-api` (ver **API REST**).
+Paquete `test` en `test/`. Prueban la persistencia contra la base real: usuario, alumno, profesor, ejercicio, rutina, clase, inscripciones y consultas multitabla. Las de alumno cubren el orden `(nombre, apellido, id)` y la ventana `LIMIT`/`OFFSET`. También hay pruebas de páginas con `httptest` (login, roles y el listado de `/alumnos`). `make test` levanta un volumen nuevo y, al terminar, borra contenedores y volúmenes. **No** arranca el servidor HTTP; las pruebas de la API se corren por separado con `make test-api` (ver **API REST**).
 
 ## Login y roles
 
@@ -207,36 +207,36 @@ Capa onion: handler HTTP → servicio → puerto. `*db.Queries` implementa los p
 
 La aplicación se abre con `make run-app`, descrito en «Cómo ejecutar», y queda en `http://localhost:8080`.
 
-Las páginas de gestión se renderizan del lado del servidor con `templ`. `/` solo redirige según la sesión; el listado de alumnos está en `/alumnos`. `/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran sus registros y el formulario de alta. Los formularios usan POST tradicional y el servidor redirige con HTTP 303 (Post/Redirect/Get).
+Las páginas de gestión se renderizan del lado del servidor con `templ`. `/` solo redirige según la sesión. `/alumnos` lista de a 10, ordenado por nombre, apellido e id. `/profesores`, `/ejercicios`, `/rutinas` y `/clases` muestran el listado completo, ordenado por id, y el formulario de alta. El alta y la baja usan HTMX. Editar guarda con POST y responde 303 al listado.
 
 | Método | Ruta | Qué hace |
 |---|---|---|
 | `GET` | `/` | Redirige: profesor a `/alumnos`, administrador a `/profesores`, alumno a `/mi-rutina`, sin sesión a `/login` |
-| `GET` | `/alumnos` | Listado y alta de alumnos |
-| `POST` | `/alumnos` | Alta; 303 hacia `/alumnos` |
+| `GET` | `/alumnos` | Listado de a 10, ordenado por nombre, apellido e id. Sin query: `limit=10` y `offset=0`. Otro `limit`, o un `offset` inválido o negativo, se corrige a esos valores. El título muestra el total |
+| `POST` | `/alumnos` | Alta. Con HTMX: 200 y `HX-Redirect` a `/alumnos?limit=10&offset=N`, la página del nuevo. Sin HTMX: 303 a esa URL |
 | `GET` | `/alumnos/{id}/editar` | Formulario de edición |
 | `POST` | `/alumnos/{id}` | Guardar plan, vencimiento y rutina; 303 hacia `/alumnos` |
-| `POST` | `/alumnos/{id}/eliminar` | Baja; 303 hacia `/alumnos` |
+| `DELETE` | `/alumnos/{id}` | Baja. HTMX recibe 200 vacío y quita la fila |
 | `GET` | `/profesores` | Listado y alta |
-| `POST` | `/profesores` | Alta; 303 hacia `/profesores` |
+| `POST` | `/profesores` | Alta por HTMX: 200 con la fila nueva |
 | `GET` | `/profesores/{id}/editar` | Formulario de edición |
 | `POST` | `/profesores/{id}` | Guardar especialidad; 303 hacia `/profesores` |
-| `POST` | `/profesores/{id}/eliminar` | Baja; 303 hacia `/profesores` |
+| `DELETE` | `/profesores/{id}` | Baja. HTMX recibe 200 vacío y quita la fila |
 | `GET` | `/ejercicios` | Listado y alta |
-| `POST` | `/ejercicios` | Alta; 303 hacia `/ejercicios` |
+| `POST` | `/ejercicios` | Alta por HTMX: 200 con la fila nueva |
 | `GET` | `/ejercicios/{id}/editar` | Formulario de edición |
 | `POST` | `/ejercicios/{id}` | Guardar; 303 hacia `/ejercicios` |
-| `POST` | `/ejercicios/{id}/eliminar` | Baja; 303 hacia `/ejercicios` |
+| `DELETE` | `/ejercicios/{id}` | Baja. HTMX recibe 200 vacío y quita la fila |
 | `GET` | `/rutinas` | Listado y alta |
-| `POST` | `/rutinas` | Alta; exige al menos un ejercicio; 303 hacia `/rutinas` |
+| `POST` | `/rutinas` | Alta por HTMX: 200 con la fila nueva. Exige al menos un ejercicio |
 | `GET` | `/rutinas/{id}/editar` | Edición, con ejercicios ya asociados preseleccionados |
 | `POST` | `/rutinas/{id}` | Guardar atributos, profesor y ejercicios; 303 hacia `/rutinas` |
-| `POST` | `/rutinas/{id}/eliminar` | Baja; 303 hacia `/rutinas` |
+| `DELETE` | `/rutinas/{id}` | Baja. HTMX recibe 200 vacío y quita la fila |
 | `GET` | `/clases` | Listado y alta |
-| `POST` | `/clases` | Alta; 303 hacia `/clases` |
+| `POST` | `/clases` | Alta por HTMX: 200 con la fila nueva |
 | `GET` | `/clases/{id}/editar` | Formulario de edición |
 | `POST` | `/clases/{id}` | Guardar; 303 hacia `/clases` |
-| `POST` | `/clases/{id}/eliminar` | Baja; 303 hacia `/clases` |
+| `DELETE` | `/clases/{id}` | Baja. HTMX recibe 200 vacío y quita la fila |
 | `GET` | `/static/` | Archivos de `static/` (`/static/styles.css`) |
 
 Las cinco tablas permiten editar y borrar filas:
@@ -254,37 +254,11 @@ El nombre visible de la aplicación es **Gym Web**.
 
 ### Organización de los handlers web
 
-La separación entre los handlers de alumnos/profesores y los del resto de los
-catálogos es intencional; no indica que falten operaciones. Alumnos y profesores
-representan altas de personas: ambos crean primero una identidad de usuario
-(nombre, apellido, correo y contraseña) y luego sus datos específicos. Por eso
-tienen handlers de listado y creación propios en `internal/web/handler.go`.
+Las páginas de catálogo entran por `internal/web/catalog.go`. `catalog_pages.go` arma el listado y `catalog_forms.go` el alta, la edición y la baja. Alumnos y profesores crean primero un `usuario` y después su fila; ejercicios, rutinas y clases no crean usuarios.
 
-Ejercicios, rutinas y clases no crean usuarios. Sus rutas delegan en operaciones
-comunes de catálogo (`showCatalog`, `editCatalog`, `saveCatalog` y
-`deleteCatalog`), implementadas en `internal/web/catalog_pages.go` y
-`internal/web/catalog_forms.go`. Los métodos por entidad de `catalog.go` son
-adaptadores del router: eligen el catálogo y si la operación es alta, edición o
-baja.
+El alta fallida devuelve solo el mensaje del formulario, para que HTMX lo pegue sin recargar la lista. La contraseña no se conserva. La edición o la baja fallida vuelven a dibujar la página con el mensaje.
 
-`renderFormError` está limitado a las altas de alumnos y profesores porque solo
-lo invocan `CreateAlumno` y `CreateProfesor`. Si esos formularios fallan, vuelve
-a cargar la tabla correspondiente y conserva los campos enviados para que la
-persona pueda corregirlos; la contraseña no se conserva. Los errores de alta,
-edición o baja de ejercicios, rutinas y clases —y los de edición/baja de alumnos
-y profesores— siguen otro recorrido: `saveCatalog` o `deleteCatalog` llama a
-`showCatalog`, que reconstruye la página con sus valores y el mensaje de error.
-
-Esta distinción simplifica el flujo actual al mantener juntas las altas de
-identidad y reutilizar el mismo flujo para los catálogos restantes. No es una
-limitación del servidor ni un requisito de Go: podría refactorizarse a un flujo
-único, pero habría que conservar las diferencias de campos y servicios para no
-perder validación ni los valores del formulario al mostrar errores.
-
-El flujo de edición y baja es server-side: editar abre una página GET y
-guarda con POST; eliminar también se solicita con POST porque los formularios HTML
-nativos solo soportan GET y POST. No se usa HTMX ni se modifica el DOM desde
-JavaScript para estas operaciones.
+Editar abre un GET y guarda con POST, que responde 303 al listado. Borrar es `DELETE`: HTMX reemplaza la fila por la respuesta vacía. El alta de alumnos redirige a la página que le toca en el orden nombre, apellido, id. El alta de los demás catálogos devuelve la fila nueva y HTMX la agrega al final.
 
 La API JSON de TP3 se conserva en `/api/...` para clientes existentes y para sus pruebas; la interfaz web ya no la consume desde JavaScript. Los endpoints son los mismos que se especifican en la rama `tp3`. Se dejan como ambiente de prueba: se pueden probar con curl o Postman, sin pasar por las páginas HTML.
 
@@ -312,14 +286,7 @@ La interfaz de administración se genera en el servidor con componentes `templ`.
 `make build` ejecuta sqlc, genera las vistas con `templ generate` y compila el
 servidor. La aplicación se abre con `make run-app`, descrito en «Cómo ejecutar», y queda en `http://localhost:8080`.
 
-El listado y el formulario se componen en `views/layout.templ`,
-`views/entity_list.templ` y `views/entity_form.templ`. La interfaz permite
-registrar y listar alumnos, profesores, ejercicios, rutinas y clases; también
-editar y eliminar sus registros. Los formularios usan el patrón
-Post/Redirect/Get y las páginas se vuelven a renderizar en el servidor. No hay
-JavaScript de cliente en estas páginas. La base PostgreSQL debe estar activa.
-La integración sin recarga mediante HTMX corresponde al TP6 y se deja para una
-etapa posterior.
+El marco está en `views/layout.templ` y carga HTMX. El listado de alumnos está en `views/alumnos_list.templ`; el de los demás catálogos, en `views/entity_list.templ`. El formulario es `views/entity_form.templ`. La interfaz permite registrar, listar, editar y eliminar alumnos, profesores, ejercicios, rutinas y clases. El alta y la baja no recargan la página. Editar sigue siendo una página completa, con POST y redirección 303. La base PostgreSQL debe estar activa.
 
 ### Ejemplos sueltos
 
@@ -367,8 +334,8 @@ En este TP la persistencia, los tests y la API cubren el modelo completo (usuari
 
 - `internal/handler`: capa HTTP. Parsea JSON/URL, llama al servicio y traduce los
   errores de dominio a códigos de estado (`json.go`). No conoce SQL.
-- `internal/web`: páginas HTML. Formularios, catálogos y redirección 303. Tampoco conoce SQL.
-- `views/`: componentes templ (`layout.templ`, `entity_list.templ`, `entity_form.templ`).
+- `internal/web`: páginas HTML. Formularios, catálogos, HTMX y la página de `/alumnos`. Tampoco conoce SQL.
+- `views/`: componentes templ (`layout.templ`, `alumnos_list.templ`, `entity_list.templ`, `entity_form.templ`).
 - `internal/service`: lógica de negocio y validaciones. Define los tipos del
   dominio (`*_types.go`), los servicios (CRUD) y los **puertos** (`ports.go`).
 - `db/sqlc`: código generado por sqlc (paquete `db`). `*db.Queries` implementa
