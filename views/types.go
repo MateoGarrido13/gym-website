@@ -47,9 +47,10 @@ type PageData struct {
 	FormValues        FormValues
 	Entities          []Entity
 	Headers           []string
-	Options           []Option
-	ExerciseOptions   []Option
-	SelectedExercises []string
+	Options               []Option
+	ExerciseOptions       []Option
+	SelectedExercises     []string
+	SelectedWgerExercises []WgerExerciseOption
 	UserName          string // usuario con sesión; vacío si no hay
 	UserRol           string // rol del usuario; decide qué menú se muestra
 	Paged             bool   // true solo en el listado paginado de alumnos

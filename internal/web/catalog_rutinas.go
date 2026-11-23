@@ -54,7 +54,53 @@ func (res rutinasResource) FormOptions(r *http.Request, page *views.PageData, va
 	}
 	page.ExerciseOptions = exercises
 	page.SelectedExercises = values.SelectedExercises
+	page.SelectedWgerExercises = res.resolveWgerOptions(r, values.SelectedExercises)
 	return nil
+}
+
+// resolveWgerOptions convierte una lista de IDs (strings) en opciones de vista
+// para el componente de wger. Primero intenta resolver contra el catálogo local;
+// si no existe, consulta la API de wger (si el ACL está disponible).
+func (res rutinasResource) resolveWgerOptions(r *http.Request, ids []string) []views.WgerExerciseOption {
+	options := make([]views.WgerExerciseOption, 0, len(ids))
+	seen := make(map[int32]bool, len(ids))
+	for _, value := range ids {
+		id, err := strconv.ParseInt(value, 10, 32)
+		if err != nil || id <= 0 {
+			continue
+		}
+		id32 := int32(id)
+		if seen[id32] {
+			continue
+		}
+		seen[id32] = true
+
+		// 1) Intenta resolver contra el catálogo local de ejercicios.
+		if ex, err := res.h.ejercicios.Get(r.Context(), id32); err == nil {
+			muscle := ""
+			if ex.GrupoMuscular != nil {
+				muscle = *ex.GrupoMuscular
+			}
+			options = append(options, views.WgerExerciseOption{
+				ID:          int(ex.ID),
+				Name:        ex.Nombre,
+				MuscleGroup: muscle,
+			})
+			continue
+		}
+
+		// 2) Si no existe localmente, consulta la API de wger.
+		if res.h.wgerACL != nil {
+			if wex, err := res.h.wgerACL.GetExerciseByID(r.Context(), int(id32)); err == nil && wex != nil {
+				options = append(options, views.WgerExerciseOption{
+					ID:          wex.ID,
+					Name:        wex.Name,
+					MuscleGroup: wex.MuscleGroup,
+				})
+			}
+		}
+	}
+	return options
 }
 
 func (res rutinasResource) EditValues(r *http.Request, id int32) (views.FormValues, error) {

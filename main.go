@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	db "PRACTICO_DOS/db/sqlc"
 	"PRACTICO_DOS/internal/handler"
+	"PRACTICO_DOS/internal/integration"
 	"PRACTICO_DOS/internal/service"
 
 	_ "github.com/lib/pq"
@@ -43,11 +45,12 @@ func main() {
 	clases_horario := service.NewClaseHorarioService(queries)
 	inscripciones := service.NewInscripcionService(queries)
 	auth := service.NewAuthService(queries)
+	wgerACL := integration.NewWgerACL("", 5*time.Second)
 	// Borra las sesiones vencidas que quedaron de corridas anteriores.
 	if err := auth.LimpiarExpiradas(context.Background()); err != nil {
 		log.Printf("no se pudieron limpiar las sesiones vencidas: %v", err)
 	}
-	router := handler.NewRouter(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, auth, "./static")
+	router := handler.NewRouter(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, clases_horario, inscripciones, auth, wgerACL, "./static")
 
 	port := os.Getenv("PORT")
 	if port == "" {

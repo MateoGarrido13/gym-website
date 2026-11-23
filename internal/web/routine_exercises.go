@@ -38,7 +38,16 @@ func (h *Handler) validateRoutineExerciseIDs(r *http.Request, values []string) (
 	seen := make(map[int32]bool, len(values))
 	for _, value := range values {
 		id, err := positiveInt32(value, "La selección de ejercicios no es válida.")
-		if err != nil || !allowed[id] || seen[id] {
+		if err != nil || seen[id] {
+			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
+		}
+		// Si no existe en el catálogo local, intenta validar contra la API de wger.
+		if !allowed[id] && h.wgerACL != nil {
+			if wex, err := h.wgerACL.GetExerciseByID(r.Context(), int(id)); err == nil && wex != nil {
+				allowed[id] = true
+			}
+		}
+		if !allowed[id] {
 			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
 		}
 		selected = append(selected, id)

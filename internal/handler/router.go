@@ -3,11 +3,12 @@ package handler
 import (
 	"net/http"
 
+	"PRACTICO_DOS/internal/integration"
 	"PRACTICO_DOS/internal/service"
 	"PRACTICO_DOS/internal/web"
 )
 //hay endpoints que ya no se consultan por el frontend, pero seran útiles para demos con curl/ postman
-func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, profesores *service.ProfesorService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, auth *service.AuthService, staticDir string) http.Handler {
+func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoService, profesores *service.ProfesorService, rutinas *service.RutinaService, rutinas_ejercicio *service.RutinaEjercicioService, clases *service.ClaseService, clases_horario *service.ClaseHorarioService, inscripciones *service.InscripcionService, auth *service.AuthService, wgerACL integration.WgerACL, staticDir string) http.Handler {
 	ej := NewEjercicioHandler(ejercicios)
 	al := NewAlumnoHandler(alumnos)
 	pr := NewProfesorHandler(profesores)
@@ -16,7 +17,7 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	cl := NewClaseHandler(clases)
 	ch := NewClaseHorarioHandler(clases_horario)
 	ins := NewInscripcionHandler(inscripciones)
-	pages := web.NewHandler(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, auth)
+	pages := web.NewHandler(ejercicios, alumnos, profesores, rutinas, rutinas_ejercicio, clases, auth, wgerACL)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/ejercicios", ej.Create)
@@ -101,6 +102,7 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	mux.HandleFunc("GET /rutinas/{id}/editar", profesor(pages.EditRutina))
 	mux.HandleFunc("POST /rutinas/{id}", profesor(pages.UpdateRutina))
 	mux.HandleFunc("DELETE /rutinas/{id}", profesor(pages.DeleteRutina))
+	mux.HandleFunc("GET /rutinas/ejercicios/buscar", profesor(pages.SearchRoutineExercises))
 	mux.HandleFunc("GET /clases", profesor(pages.Clases))
 	mux.HandleFunc("POST /clases", profesor(pages.CreateClase))
 	mux.HandleFunc("GET /clases/{id}/editar", profesor(pages.EditClase))

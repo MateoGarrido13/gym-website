@@ -10,24 +10,5 @@ templ RutinaFields(data PageData) {
 		<input type="number" name="duracion_semanas" min="1" value={ data.FormValues.DuracionSemanas } required/>
 	</label>
 	@ProfesorSelect(data)
-	<fieldset class="exercise-picker field-wide">
-		<legend>Ejercicios de la rutina <b class="required-mark">*</b></legend>
-		if len(data.ExerciseOptions) == 0 {
-			<p class="field-hint">Todavía no hay ejercicios. Primero agrega registros en la sección Ejercicios.</p>
-		} else {
-			<p class="field-hint">Selecciona al menos un ejercicio. Los nuevos se agregan al final de la lista.</p>
-			<div class="exercise-options">
-				for _, option := range data.ExerciseOptions {
-					<label class="exercise-option">
-						if isSelected(data.SelectedExercises, option.ID) {
-							<input type="checkbox" name="ejercicio_id" value={ stringID(option.ID) } checked/>
-						} else {
-							<input type="checkbox" name="ejercicio_id" value={ stringID(option.ID) }/>
-						}
-						<span>{ option.Label }</span>
-					</label>
-				}
-			</div>
-		}
-	</fieldset>
+	@RoutineExerciseSelector(data.SelectedWgerExercises)
 }

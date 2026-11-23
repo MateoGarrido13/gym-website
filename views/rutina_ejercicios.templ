@@ -1,0 +1,69 @@
+package views
+
+import "strconv"
+
+// WgerExerciseOption representa el DTO de vista para cada opción de ejercicio disponible.
+type WgerExerciseOption struct {
+	ID          int
+	Name        string
+	MuscleGroup string
+}
+
+// RoutineExerciseSelector renderiza el buscador HTMX y el contenedor scrollable de resultados.
+// Se invoca desde form_rutinas.templ dentro del formulario de alta/edición de rutinas.
+templ RoutineExerciseSelector(selected []WgerExerciseOption) {
+	<div class="routine-exercise-selector">
+		<label for="wger-exercise-search">Buscar ejercicios (API wger)</label>
+		<input
+			id="wger-exercise-search"
+			type="search"
+			name="q"
+			placeholder="Escribí al menos 3 caracteres (ej. Press, Sentadilla)..."
+			autocomplete="off"
+			hx-get="/rutinas/ejercicios/buscar"
+			hx-trigger="keyup changed delay:300ms"
+			hx-target="#rutina-ejercicios-resultados"
+			hx-swap="innerHTML"
+			oninput="const v = this.value.trim(); if (v.length > 0 && v.length < 3) event.stopImmediatePropagation();"
+		/>
+
+		<div
+			id="rutina-ejercicios-resultados"
+			class="exercise-results-scroll"
+			style="max-height: 260px; overflow-y: auto; border: 1px solid #ccc; margin-top: 0.5rem; padding: 0.5rem;"
+		>
+			if len(selected) > 0 {
+				@WgerExerciseResults(selected)
+			} else {
+				<p class="muted">Ingresá al menos 3 caracteres para buscar ejercicios disponibles.</p>
+			}
+		</div>
+	</div>
+}
+
+// WgerExerciseResults renderiza únicamente el fragmento interno que HTMX inyecta vía innerHTML.
+templ WgerExerciseResults(options []WgerExerciseOption) {
+	if len(options) == 0 {
+		<p class="empty-results">No se encontraron resultados</p>
+	} else {
+		<ul class="exercise-option-list" style="list-style: none; margin: 0; padding: 0;">
+			for _, opt := range options {
+				<li class="exercise-option-item" style="padding: 0.35rem 0; border-bottom: 1px solid #eee;">
+					<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+						<input
+							type="checkbox"
+							name="ejercicio_id"
+							value={ strconv.Itoa(opt.ID) }
+						/>
+						<span>
+							<strong>{ opt.Name }</strong>
+							if opt.MuscleGroup != "" {
+								<small> ({ opt.MuscleGroup })</small>
+							}
+						</span>
+					</label>
+				</li>
+			}
+		</ul>
+	}
+}

@@ -3,6 +3,7 @@ package test
 import (
 	db "PRACTICO_DOS/db/sqlc"
 	"PRACTICO_DOS/internal/handler"
+	"PRACTICO_DOS/internal/integration"
 	"PRACTICO_DOS/internal/service"
 	"PRACTICO_DOS/internal/web"
 	"PRACTICO_DOS/views"
@@ -23,7 +24,7 @@ func nuevoRouterDePrueba() http.Handler {
 		service.NewProfesorService(queries), service.NewRutinaService(queries),
 		service.NewRutinaEjercicioService(queries), service.NewClaseService(queries),
 		service.NewClaseHorarioService(queries), service.NewInscripcionService(queries),
-		service.NewAuthService(queries), "../static",
+		service.NewAuthService(queries), integration.NewWgerACL("", 5*time.Second), "../static",
 	)
 }
 
@@ -145,7 +146,7 @@ func TestLogoutWebCierraLaSesion(t *testing.T) {
 }
 
 func TestRequireRole(t *testing.T) {
-	pages := web.NewHandler(nil, nil, nil, nil, nil, nil, service.NewAuthService(queries))
+	pages := web.NewHandler(nil, nil, nil, nil, nil, nil, service.NewAuthService(queries), nil)
 	router := nuevoRouterDePrueba()
 	solo := pages.RequireRole(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := web.UserFrom(r.Context())
