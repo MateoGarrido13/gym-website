@@ -15,8 +15,11 @@ const sessionCookie = "session"
 
 // homeFor es a donde va cada rol después de entrar.
 func homeFor(rol string) string {
-	if rol == service.RolProfesor {
+	switch rol {
+	case service.RolProfesor:
 		return "/alumnos"
+	case service.RolAdmin:
+		return "/profesores"
 	}
 	return "/mi-rutina"
 }
@@ -62,7 +65,7 @@ func (h *Handler) currentUser(r *http.Request) (user service.UsuarioSesion, ok b
 	return user, true, nil
 }
 
-// LoginPage muestra los dos accesos y, si viene ?rol=, el formulario de ese
+// LoginPage muestra los accesos y, si viene ?rol=, el formulario de ese
 // rol. Quien ya tiene sesión va directo a su inicio.
 func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	if user, ok, err := h.currentUser(r); err != nil {
@@ -122,7 +125,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func validRol(rol string) string {
-	if rol == service.RolAlumno || rol == service.RolProfesor {
+	if rol == service.RolAlumno || rol == service.RolProfesor || rol == service.RolAdmin {
 		return rol
 	}
 	return ""

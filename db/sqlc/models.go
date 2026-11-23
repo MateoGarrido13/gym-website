@@ -61,8 +61,9 @@ func (ns NullEnumDiaSemana) Value() (driver.Value, error) {
 type EnumRol string
 
 const (
-	EnumRolAlumno   EnumRol = "alumno"
-	EnumRolProfesor EnumRol = "profesor"
+	EnumRolAlumno        EnumRol = "alumno"
+	EnumRolProfesor      EnumRol = "profesor"
+	EnumRolAdministrador EnumRol = "administrador"
 )
 
 func (e *EnumRol) Scan(src interface{}) error {

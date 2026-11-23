@@ -10,7 +10,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 // LoginPage es independiente de Layout: no lleva el menú de administración.
-// Sin rol elegido muestra los dos accesos; con rol, el formulario de ese rol.
+// Sin rol elegido muestra los accesos; con rol, el formulario de ese rol.
 func LoginPage(data LoginData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -92,7 +92,7 @@ func LoginPage(data LoginData) templ.Component {
 			}
 		}
 		if data.Rol == "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<nav class=\"login-roles\" aria-label=\"Tipo de acceso\"><a class=\"role-option\" href=\"/login?rol=profesor\"><strong>Entrar como profesor</strong> <span>Gestiona alumnos, rutinas y clases.</span></a> <a class=\"role-option\" href=\"/login?rol=alumno\"><strong>Entrar como alumno</strong> <span>Consulta tu rutina de entrenamiento.</span></a></nav>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<nav class=\"login-roles\" aria-label=\"Tipo de acceso\"><a class=\"role-option\" href=\"/login?rol=profesor\"><strong>Entrar como profesor</strong> <span>Gestiona alumnos, rutinas, ejercicios y clases.</span></a> <a class=\"role-option\" href=\"/login?rol=alumno\"><strong>Entrar como alumno</strong> <span>Consulta tu rutina de entrenamiento.</span></a> <a class=\"role-option\" href=\"/login?rol=administrador\"><strong>Entrar como administrador</strong> <span>Gestiona profesores y alumnos.</span></a></nav>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -104,7 +104,7 @@ func LoginPage(data LoginData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Rol).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/login.templ`, Line: 44, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/login.templ`, Line: 48, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -117,7 +117,7 @@ func LoginPage(data LoginData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templruntime.NewAttributeExpression(data.Email).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/login.templ`, Line: 47, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/login.templ`, Line: 51, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {

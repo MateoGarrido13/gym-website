@@ -67,23 +67,30 @@ func NewRouter(ejercicios *service.EjercicioService, alumnos *service.AlumnoServ
 	mux.HandleFunc("POST /login", pages.Login)
 	mux.HandleFunc("POST /logout", pages.Logout)
 	mux.HandleFunc("GET /", pages.Home)
-	// Las páginas de administración son solo para profesores.
+	// Ejercicios, rutinas y clases: solo profesores. Profesores: solo el
+	// administrador. Alumnos: profesores y administrador.
 	profesor := func(next http.HandlerFunc) http.HandlerFunc {
-		return pages.RequireRole(service.RolProfesor, next)
+		return pages.RequireRole(next, service.RolProfesor)
+	}
+	admin := func(next http.HandlerFunc) http.HandlerFunc {
+		return pages.RequireRole(next, service.RolAdmin)
+	}
+	gestion := func(next http.HandlerFunc) http.HandlerFunc {
+		return pages.RequireRole(next, service.RolProfesor, service.RolAdmin)
 	}
 	// La vista del alumno: solo su propia rutina.
-	mux.HandleFunc("GET /mi-rutina", pages.RequireRole(service.RolAlumno, pages.MiRutina))
+	mux.HandleFunc("GET /mi-rutina", pages.RequireRole(pages.MiRutina, service.RolAlumno))
 
-	mux.HandleFunc("GET /alumnos", profesor(pages.Alumnos))
-	mux.HandleFunc("GET /profesores", profesor(pages.Profesores))
-	mux.HandleFunc("POST /alumnos", profesor(pages.CreateAlumno))
-	mux.HandleFunc("POST /profesores", profesor(pages.CreateProfesor))
-	mux.HandleFunc("GET /alumnos/{id}/editar", profesor(pages.EditAlumno))
-	mux.HandleFunc("POST /alumnos/{id}", profesor(pages.UpdateAlumno))
-	mux.HandleFunc("DELETE /alumnos/{id}", profesor(pages.DeleteAlumno))
-	mux.HandleFunc("GET /profesores/{id}/editar", profesor(pages.EditProfesor))
-	mux.HandleFunc("POST /profesores/{id}", profesor(pages.UpdateProfesor))
-	mux.HandleFunc("DELETE /profesores/{id}", profesor(pages.DeleteProfesor))
+	mux.HandleFunc("GET /alumnos", gestion(pages.Alumnos))
+	mux.HandleFunc("GET /profesores", admin(pages.Profesores))
+	mux.HandleFunc("POST /alumnos", gestion(pages.CreateAlumno))
+	mux.HandleFunc("POST /profesores", admin(pages.CreateProfesor))
+	mux.HandleFunc("GET /alumnos/{id}/editar", gestion(pages.EditAlumno))
+	mux.HandleFunc("POST /alumnos/{id}", gestion(pages.UpdateAlumno))
+	mux.HandleFunc("DELETE /alumnos/{id}", gestion(pages.DeleteAlumno))
+	mux.HandleFunc("GET /profesores/{id}/editar", admin(pages.EditProfesor))
+	mux.HandleFunc("POST /profesores/{id}", admin(pages.UpdateProfesor))
+	mux.HandleFunc("DELETE /profesores/{id}", admin(pages.DeleteProfesor))
 	mux.HandleFunc("GET /ejercicios", profesor(pages.Ejercicios))
 	mux.HandleFunc("POST /ejercicios", profesor(pages.CreateEjercicio))
 	mux.HandleFunc("GET /ejercicios/{id}/editar", profesor(pages.EditEjercicio))

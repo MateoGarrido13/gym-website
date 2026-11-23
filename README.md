@@ -142,7 +142,7 @@ erDiagram
 
 | Tabla | Qué guarda |
 |---|---|
-| `usuario` | Datos personales y rol (`alumno` / `profesor`) |
+| `usuario` | Datos personales y rol (`alumno` / `profesor` / `administrador`) |
 | `alumno` | Fecha de inscripción, vencimiento, tipo de plan, rutina asignada |
 | `profesor` | Especialidad |
 | `ejercicio` | Nombre, descripción, grupo muscular |
@@ -160,16 +160,17 @@ Paquete `test` en `test/`. Prueban la persistencia contra la base real: usuario,
 
 ## Login y roles
 
-La app tiene dos accesos en `/login`: **entrar como profesor** y **entrar como alumno**. Cada uno valida que la cuenta tenga ese rol, y el resultado se ve distinto:
+La app tiene tres accesos en `/login`: **profesor**, **alumno** y **administrador**. Cada uno valida que la cuenta tenga ese rol, y el resultado se ve distinto:
 
-- **Profesor:** entra a `/alumnos`, con el menú de gestión (alumnos, profesores, ejercicios, rutinas y clases).
+- **Profesor:** entra a `/alumnos`, con el menú de gestión (alumnos, ejercicios, rutinas y clases). No gestiona profesores.
+- **Administrador:** entra a `/profesores`. Su menú tiene solo profesores y alumnos: da de alta, edita y borra ambos. No ve ejercicios, rutinas ni clases. El administrador no tiene tabla propia: es un `usuario` con `rol = administrador`, y no hay pantalla para crearlos (se cargan por seed o SQL).
 - **Alumno:** entra a `/mi-rutina`, una vista de solo lectura con su rutina asignada y sus ejercicios. Ve únicamente la suya: el alumno sale de la sesión, no de la URL.
 
-Cada rol queda limitado a lo suyo. Sin sesión, las páginas redirigen a `/login`; un alumno que pide una página de profesor vuelve a `/mi-rutina` y al revés. Un pedido HTMX sin sesión recibe `401` con `HX-Redirect: /login`.
+Cada rol queda limitado a lo suyo. Sin sesión, las páginas redirigen a `/login`; quien pide una página que no es de su rol vuelve a su propio inicio (por ejemplo, un profesor que pide `/profesores` vuelve a `/alumnos`). Un pedido HTMX sin sesión recibe `401` con `HX-Redirect: /login`.
 
 | Método | Ruta | Qué hace |
 |---|---|---|
-| `GET` | `/login` | Elegir rol; con `?rol=alumno` o `?rol=profesor`, el formulario |
+| `GET` | `/login` | Elegir rol; con `?rol=alumno`, `?rol=profesor` o `?rol=administrador`, el formulario |
 | `POST` | `/login` | Valida correo, contraseña y rol; abre la sesión y redirige |
 | `POST` | `/logout` | Cierra la sesión y borra la cookie |
 | `GET` | `/mi-rutina` | Rutina del alumno con sesión |
@@ -182,19 +183,20 @@ La cookie lleva el flag `Secure` solo con `COOKIE_SECURE=true`. En local no hay 
 
 ### Usuarios de prueba
 
-El alta está en `db/seed.sql`. No es una migración: `init.sh` no lo aplica y los tests arrancan con la base vacía. Lo cargan `make run-app` (volumen nuevo, después del schema) y `make seed` (sobre la base que ya está corriendo, sin borrarla). Es idempotente: si ya existe `profe@gym.test`, no inserta nada.
+El alta está en `db/seed.sql`. No es una migración: `init.sh` no lo aplica y los tests arrancan con la base vacía. Lo cargan `make run-app` (volumen nuevo, después del schema) y `make seed` (sobre la base que ya está corriendo, sin borrarla). Es idempotente: si ya existe `profe@gym.test` no repite el resto, y el administrador se agrega solo si falta.
 
-Ese archivo da de alta un profesor y 30 alumnos. Los 30 quedan con la rutina «Fuerza full body», que pertenece a ese profesor. Todos los alumnos comparten la misma contraseña.
+Ese archivo da de alta un administrador, un profesor y 30 alumnos. Los 30 quedan con la rutina «Fuerza full body», que pertenece a ese profesor. Todos los alumnos comparten la misma contraseña.
 
 | Rol | Correo | Contraseña |
 |---|---|---|
+| Administrador | `admin@gym.test` | `admin1234` |
 | Profesor | `profe@gym.test` | `profe1234` |
 | Alumno | `alumno01@gym.test` … `alumno30@gym.test` | `alumno1234` |
 
 Para ingresar, con la app en `http://localhost:8080`:
 
 1. Abrir `/login`.
-2. Elegir **Entrar como profesor** o **Entrar como alumno**. El rol del acceso tiene que ser el de la cuenta.
+2. Elegir **Entrar como profesor**, **alumno** o **administrador**. El rol del acceso tiene que ser el de la cuenta.
 3. Completar el correo y la contraseña de la tabla.
 
 El profesor entra a `/alumnos`. Cualquier `alumnoNN@gym.test` entra a `/mi-rutina` y ve «Fuerza full body». Son solo para desarrollo.
@@ -209,7 +211,7 @@ Las páginas de gestión se renderizan del lado del servidor con `templ`. `/` so
 
 | Método | Ruta | Qué hace |
 |---|---|---|
-| `GET` | `/` | Redirige: profesor a `/alumnos`, alumno a `/mi-rutina`, sin sesión a `/login` |
+| `GET` | `/` | Redirige: profesor a `/alumnos`, administrador a `/profesores`, alumno a `/mi-rutina`, sin sesión a `/login` |
 | `GET` | `/alumnos` | Listado y alta de alumnos |
 | `POST` | `/alumnos` | Alta; 303 hacia `/alumnos` |
 | `GET` | `/alumnos/{id}/editar` | Formulario de edición |

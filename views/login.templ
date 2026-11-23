@@ -1,7 +1,7 @@
 package views
 
 // LoginPage es independiente de Layout: no lleva el menú de administración.
-// Sin rol elegido muestra los dos accesos; con rol, el formulario de ese rol.
+// Sin rol elegido muestra los accesos; con rol, el formulario de ese rol.
 templ LoginPage(data LoginData) {
 	<!doctype html>
 	<html lang="es">
@@ -32,11 +32,15 @@ templ LoginPage(data LoginData) {
 						<nav class="login-roles" aria-label="Tipo de acceso">
 							<a class="role-option" href="/login?rol=profesor">
 								<strong>Entrar como profesor</strong>
-								<span>Gestiona alumnos, rutinas y clases.</span>
+								<span>Gestiona alumnos, rutinas, ejercicios y clases.</span>
 							</a>
 							<a class="role-option" href="/login?rol=alumno">
 								<strong>Entrar como alumno</strong>
 								<span>Consulta tu rutina de entrenamiento.</span>
+							</a>
+							<a class="role-option" href="/login?rol=administrador">
+								<strong>Entrar como administrador</strong>
+								<span>Gestiona profesores y alumnos.</span>
 							</a>
 						</nav>
 					} else {

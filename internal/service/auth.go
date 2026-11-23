@@ -14,10 +14,11 @@ import (
 	db "PRACTICO_DOS/db/sqlc"
 )
 
-// RolAlumno y RolProfesor son los valores de enum_rol.
+// RolAlumno, RolProfesor y RolAdmin son los valores de enum_rol.
 const (
 	RolAlumno   = "alumno"
 	RolProfesor = "profesor"
+	RolAdmin    = "administrador"
 )
 
 type AuthService struct {
@@ -36,7 +37,7 @@ var hashFalso, _ = hashPassword("contraseña-que-nadie-usa")
 // la pantalla ("entrar como alumno" con una cuenta de profesor falla). Todos
 // los fallos devuelven el mismo ErrUnauthorized para no filtrar cuál fue.
 func (s *AuthService) Login(ctx context.Context, email, password, rol string) (SesionIniciada, error) {
-	if rol != RolAlumno && rol != RolProfesor {
+	if rol != RolAlumno && rol != RolProfesor && rol != RolAdmin {
 		return SesionIniciada{}, fmt.Errorf("%w: rol inválido", ErrInvalid)
 	}
 	email = strings.TrimSpace(email)

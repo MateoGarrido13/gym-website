@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"slices"
 
 	"PRACTICO_DOS/internal/service"
 )
@@ -16,14 +17,14 @@ func UserFrom(ctx context.Context) (service.UsuarioSesion, bool) {
 	return user, ok
 }
 
-// RequireRole deja pasar solo a quien tenga sesión válida con ese rol y le
-// pasa el usuario al handler por el contexto.
+// RequireRole deja pasar solo a quien tenga sesión válida con alguno de esos
+// roles y le pasa el usuario al handler por el contexto.
 //   - sin sesión → /login
 //   - sesión de otro rol → al inicio de su propio rol
 //
 // Si el pedido viene de HTMX, un redirect normal metería la página de login
 // dentro del fragmento; por eso se responde con HX-Redirect.
-func (h *Handler) RequireRole(rol string, next http.HandlerFunc) http.HandlerFunc {
+func (h *Handler) RequireRole(next http.HandlerFunc, roles ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, ok, err := h.currentUser(r)
 		if err != nil {
@@ -36,7 +37,7 @@ func (h *Handler) RequireRole(rol string, next http.HandlerFunc) http.HandlerFun
 			redirect(w, r, "/login")
 			return
 		}
-		if user.Rol != rol {
+		if !slices.Contains(roles, user.Rol) {
 			redirect(w, r, homeFor(user.Rol))
 			return
 		}

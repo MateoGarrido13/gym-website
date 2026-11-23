@@ -73,6 +73,7 @@ func (h *Handler) renderCreateError(w http.ResponseWriter, r *http.Request, err 
 func (h *Handler) renderStatus(w http.ResponseWriter, r *http.Request, page views.PageData, status int) {
 	if user, ok := UserFrom(r.Context()); ok {
 		page.UserName = user.Nombre + " " + user.Apellido
+		page.UserRol = user.Rol
 	}
 	var output bytes.Buffer
 	if err := views.IndexPage(page).Render(r.Context(), &output); err != nil {

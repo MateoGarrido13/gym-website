@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -39,13 +40,14 @@ func cookieDeSesion(rec *httptest.ResponseRecorder) *http.Cookie {
 	return nil
 }
 
-func TestLoginPageMuestraLosDosAccesos(t *testing.T) {
+func TestLoginPageMuestraLosAccesos(t *testing.T) {
 	rec := httptest.NewRecorder()
 	nuevoRouterDePrueba().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/login", nil))
 
 	body := rec.Body.String()
 	if rec.Code != http.StatusOK ||
-		!strings.Contains(body, "Entrar como profesor") || !strings.Contains(body, "Entrar como alumno") {
+		!strings.Contains(body, "Entrar como profesor") || !strings.Contains(body, "Entrar como alumno") ||
+		!strings.Contains(body, "Entrar como administrador") {
 		t.Fatalf("status %d, faltan los accesos por rol", rec.Code)
 	}
 }
@@ -66,6 +68,7 @@ func TestLoginWebCorrectoRedirigeSegunRolYSeteaCookie(t *testing.T) {
 	casos := []struct{ rol, destino string }{
 		{service.RolProfesor, "/alumnos"},
 		{service.RolAlumno, "/mi-rutina"},
+		{service.RolAdmin, "/profesores"},
 	}
 	for _, c := range casos {
 		t.Run(c.rol, func(t *testing.T) {
@@ -139,13 +142,13 @@ func TestLogoutWebCierraLaSesion(t *testing.T) {
 func TestRequireRole(t *testing.T) {
 	pages := web.NewHandler(nil, nil, nil, nil, nil, nil, service.NewAuthService(queries))
 	router := nuevoRouterDePrueba()
-	solo := pages.RequireRole(service.RolProfesor, func(w http.ResponseWriter, r *http.Request) {
+	solo := pages.RequireRole(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := web.UserFrom(r.Context())
 		if !ok || user.Rol != service.RolProfesor {
 			t.Errorf("el usuario no llegó por el contexto: %+v ok=%v", user, ok)
 		}
 		w.WriteHeader(http.StatusNoContent)
-	})
+	}, service.RolProfesor)
 
 	_, emailProfe := crearUsuarioConClave(t, service.RolProfesor, "secret123")
 	_, emailAlumno := crearUsuarioConClave(t, service.RolAlumno, "secret123")
@@ -202,6 +205,8 @@ func TestHomeRedirigeSegunSesion(t *testing.T) {
 	_, emailAlumno := crearUsuarioConClave(t, service.RolAlumno, "secret123")
 	profe := cookieDeSesion(postLogin(router, emailProfe, "secret123", service.RolProfesor))
 	alumno := cookieDeSesion(postLogin(router, emailAlumno, "secret123", service.RolAlumno))
+	_, emailAdmin := crearUsuarioConClave(t, service.RolAdmin, "secret123")
+	admin := cookieDeSesion(postLogin(router, emailAdmin, "secret123", service.RolAdmin))
 
 	casos := []struct {
 		nombre  string
@@ -211,6 +216,7 @@ func TestHomeRedirigeSegunSesion(t *testing.T) {
 		{"sin sesión", nil, "/login"},
 		{"profesor", profe, "/alumnos"},
 		{"alumno", alumno, "/mi-rutina"},
+		{"administrador", admin, "/profesores"},
 	}
 	for _, c := range casos {
 		t.Run(c.nombre, func(t *testing.T) {
@@ -278,5 +284,61 @@ func TestPostSinSesionNoCreaDatos(t *testing.T) {
 
 	if _, err := queries.GetUsuarioByEmail(ctx, email); err == nil {
 		t.Error("un POST sin sesión no debería crear el alumno")
+	}
+}
+
+// Profesores: solo administrador. Alumnos: profesor y administrador.
+// Ejercicios, rutinas y clases: solo profesor. /mi-rutina: solo alumno.
+func TestPermisosPorRol(t *testing.T) {
+	router := nuevoRouterDePrueba()
+	cookies := map[string]*http.Cookie{}
+	for _, rol := range []string{service.RolProfesor, service.RolAlumno, service.RolAdmin} {
+		_, email := crearUsuarioConClave(t, rol, "secret123")
+		cookies[rol] = cookieDeSesion(postLogin(router, email, "secret123", rol))
+	}
+	home := map[string]string{
+		service.RolProfesor: "/alumnos", service.RolAlumno: "/mi-rutina", service.RolAdmin: "/profesores",
+	}
+
+	rutas := []struct {
+		ruta      string
+		permitido []string
+	}{
+		{"/alumnos", []string{service.RolProfesor, service.RolAdmin}},
+		{"/profesores", []string{service.RolAdmin}},
+		{"/ejercicios", []string{service.RolProfesor}},
+		{"/rutinas", []string{service.RolProfesor}},
+		{"/clases", []string{service.RolProfesor}},
+		{"/mi-rutina", []string{service.RolAlumno}},
+	}
+	for _, r := range rutas {
+		for rol, cookie := range cookies {
+			t.Run(rol+" "+r.ruta, func(t *testing.T) {
+				rec := pedirConCookie(router, http.MethodGet, r.ruta, cookie, nil)
+				if slices.Contains(r.permitido, rol) {
+					if rec.Code != http.StatusOK {
+						t.Errorf("status %d, se esperaba 200", rec.Code)
+					}
+					return
+				}
+				if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != home[rol] {
+					t.Errorf("status %d, Location %q; se esperaba 303 a %q", rec.Code, rec.Header().Get("Location"), home[rol])
+				}
+			})
+		}
+	}
+
+	// El menú de cada rol muestra solo lo que puede usar.
+	menu := func(cookie *http.Cookie, ruta string) string {
+		return pedirConCookie(router, http.MethodGet, ruta, cookie, nil).Body.String()
+	}
+	profe := menu(cookies[service.RolProfesor], "/alumnos")
+	if strings.Contains(profe, `href="/profesores"`) || !strings.Contains(profe, `href="/rutinas"`) {
+		t.Error("el menú del profesor no debe tener Profesores y sí Rutinas")
+	}
+	adm := menu(cookies[service.RolAdmin], "/profesores")
+	if !strings.Contains(adm, `href="/alumnos"`) || strings.Contains(adm, `href="/rutinas"`) ||
+		strings.Contains(adm, `href="/clases"`) || strings.Contains(adm, `href="/ejercicios"`) {
+		t.Error("el menú del administrador debe tener Alumnos y Profesores, y nada más")
 	}
 }

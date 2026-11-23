@@ -51,12 +51,13 @@ type PageData struct {
 	ExerciseOptions   []Option
 	SelectedExercises []string
 	UserName          string // usuario con sesión; vacío si no hay
+	UserRol           string // rol del usuario; decide qué menú se muestra
 }
 
 // LoginData alimenta la pantalla de login. Rol vacío significa "todavía no
 // eligió": se muestran los dos accesos. Con Rol definido se muestra el formulario.
 type LoginData struct {
-	Rol   string // "alumno" | "profesor" | ""
+	Rol   string // "alumno" | "profesor" | "administrador" | ""
 	Email string // se conserva si el intento falla; la contraseña nunca
 	Error string
 }

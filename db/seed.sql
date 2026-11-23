@@ -4,6 +4,7 @@
 -- de prueba, no hace nada.
 --
 -- Usuarios (contraseñas solo para desarrollo, guardadas con bcrypt):
+--   admin@gym.test         admin1234     administrador
 --   profe@gym.test         profe1234     profesor
 --   alumno01@gym.test ...  alumno1234    30 alumnos, todos con la rutina
 --   alumno30@gym.test                    "Fuerza full body"
@@ -79,3 +80,9 @@ BEGIN
         VALUES (v_alumno, CURRENT_DATE, 'Mensual', v_rutina);
     END LOOP;
 END $$;
+
+-- El administrador va en su propio bloque para que `make seed` lo agregue
+-- también a una base que ya tenía el resto de los datos de prueba.
+INSERT INTO usuario (email, contrasena, nombre, apellido, rol)
+VALUES ('admin@gym.test', '$2a$10$wfSPiKFqfIHKNP4xZE1D4OB.qPPL50k30NHo8Bs.sVnmyinu298w.', 'Adriana', 'Admin', 'administrador')
+ON CONFLICT (email) DO NOTHING;

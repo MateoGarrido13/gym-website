@@ -1,6 +1,6 @@
 package views
 
-templ Layout(title string, active string, userName string) {
+templ Layout(title string, active string, userName string, userRol string) {
 <!doctype html>
 <html lang="es">
 
@@ -24,10 +24,13 @@ templ Layout(title string, active string, userName string) {
 			</a>
 			<nav class="navigation" aria-label="Navegación principal">
 				<a class={ navClass(active, "alumnos" ) } href="/alumnos">Alumnos</a>
-				<a class={ navClass(active, "profesores" ) } href="/profesores">Profesores</a>
-				<a class={ navClass(active, "ejercicios" ) } href="/ejercicios">Ejercicios</a>
-				<a class={ navClass(active, "rutinas" ) } href="/rutinas">Rutinas</a>
-				<a class={ navClass(active, "clases" ) } href="/clases">Clases</a>
+				if userRol == "administrador" {
+					<a class={ navClass(active, "profesores" ) } href="/profesores">Profesores</a>
+				} else {
+					<a class={ navClass(active, "ejercicios" ) } href="/ejercicios">Ejercicios</a>
+					<a class={ navClass(active, "rutinas" ) } href="/rutinas">Rutinas</a>
+					<a class={ navClass(active, "clases" ) } href="/clases">Clases</a>
+				}
 			</nav>
 		</aside>
 		<main class="workspace">

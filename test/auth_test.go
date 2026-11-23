@@ -5,12 +5,13 @@ import (
 	"PRACTICO_DOS/internal/service"
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"strings"
 	"testing"
 	"time"
 )
 
-// crearUsuarioConClave crea un alumno o profesor por los servicios (que
+// crearUsuarioConClave crea un alumno, profesor o administrador por los servicios (que
 // hashean la contraseña) y devuelve su email.
 func crearUsuarioConClave(t *testing.T, rol, clave string) (int32, string) {
 	t.Helper()
@@ -18,6 +19,19 @@ func crearUsuarioConClave(t *testing.T, rol, clave string) (int32, string) {
 	email := fmt.Sprintf("auth-%s-%d@example.com", rol, time.Now().UnixNano())
 	var id int32
 	switch rol {
+	case service.RolAdmin:
+		// No hay servicio de alta de administradores: se inserta el usuario directo.
+		hash, err := bcrypt.GenerateFromPassword([]byte(clave), bcrypt.MinCost)
+		if err != nil {
+			t.Fatalf("no se pudo hashear la clave: %v", err)
+		}
+		u, err := queries.CreateUsuario(ctx, db.CreateUsuarioParams{
+			Email: email, Contrasena: string(hash), Nombre: "Adriana", Apellido: "Admin", Rol: service.RolAdmin,
+		})
+		if err != nil {
+			t.Fatalf("no se pudo crear el administrador: %v", err)
+		}
+		id = u.ID
 	case service.RolProfesor:
 		p, err := service.NewProfesorService(queries).Create(ctx, service.ProfesorCreateInput{
 			Email: email, Contrasena: clave, Nombre: "Pablo", Apellido: "Profe",
