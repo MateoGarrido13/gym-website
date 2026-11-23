@@ -22,8 +22,9 @@ make run-app
 1. Instala sqlc y templ si no están, genera `db/sqlc/` y las vistas con `templ generate`, y compila `main.go`
 2. Borra contenedores y volúmenes previos
 3. Levanta Postgres y espera a que acepte conexiones (healthcheck y una espera adicional)
-4. Ejecuta la aplicación
-5. Al salir el proceso, también con Ctrl+C, borra contenedores y volúmenes
+4. Da de alta los usuarios de prueba con `db/seed.sql` (`make seed`)
+5. Ejecuta la aplicación
+6. Al salir el proceso, también con Ctrl+C, borra contenedores y volúmenes
 
 Hacen falta Go, Docker y Docker Compose, con los puertos `5432` y `8080` libres. Si el `5432` está ocupado, hay que liberarlo: `make run-app` no usa un Postgres ajeno. Para cortar el servidor, Ctrl+C en esa terminal.
 
@@ -48,7 +49,7 @@ Los tests se conectan con el driver `github.com/lib/pq` usando:
 
 `main.go` abre el mismo pool (o `DATABASE_URL` si está definida), hace `Ping` y pasa `*db.Queries` a los servicios. Si Postgres no está arriba, la app no arranca.
 
-`make run-app`, `make test` y `make test-api` borran el volumen y dejan que `init.sh` aplique el schema completo. `make up` y `make down` conservan `postgres_data`. Para aplicar un archivo nuevo sobre esa base: `make migrate FILE=db/migration/XXXX_nombre.up.sql`.
+`make run-app` borra el volumen, deja que `init.sh` aplique el schema y después carga `db/seed.sql`. `make test` y `make test-api` también borran el volumen y aplican el schema, sin ese alta. `make up` y `make down` conservan `postgres_data`. Para aplicar un archivo nuevo sobre esa base: `make migrate FILE=db/migration/XXXX_nombre.up.sql`.
 
 ### Modelo
 
@@ -181,15 +182,22 @@ La cookie lleva el flag `Secure` solo con `COOKIE_SECURE=true`. En local no hay 
 
 ### Usuarios de prueba
 
-`make run-app` y `make seed` cargan `db/seed.sql` (idempotente; los tests no lo usan):
+El alta está en `db/seed.sql`. No es una migración: `init.sh` no lo aplica y los tests arrancan con la base vacía. Lo cargan `make run-app` (volumen nuevo, después del schema) y `make seed` (sobre la base que ya está corriendo, sin borrarla). Es idempotente: si ya existe `profe@gym.test`, no inserta nada.
+
+Ese archivo da de alta un profesor y 30 alumnos. Los 30 quedan con la rutina «Fuerza full body», que pertenece a ese profesor. Todos los alumnos comparten la misma contraseña.
 
 | Rol | Correo | Contraseña |
 |---|---|---|
 | Profesor | `profe@gym.test` | `profe1234` |
-| Alumno con rutina | `alumno@gym.test` | `alumno1234` |
-| Alumno sin rutina | `sinrutina@gym.test` | `alumno1234` |
+| Alumno | `alumno01@gym.test` … `alumno30@gym.test` | `alumno1234` |
 
-`make seed` carga los datos sobre la base que ya está corriendo, sin borrarla. Son solo para desarrollo.
+Para ingresar, con la app en `http://localhost:8080`:
+
+1. Abrir `/login`.
+2. Elegir **Entrar como profesor** o **Entrar como alumno**. El rol del acceso tiene que ser el de la cuenta.
+3. Completar el correo y la contraseña de la tabla.
+
+El profesor entra a `/alumnos`. Cualquier `alumnoNN@gym.test` entra a `/mi-rutina` y ve «Fuerza full body». Son solo para desarrollo.
 
 ## API REST
 

@@ -4,9 +4,9 @@
 -- de prueba, no hace nada.
 --
 -- Usuarios (contraseñas solo para desarrollo, guardadas con bcrypt):
---   profe@gym.test      profe1234    profesor
---   alumno@gym.test     alumno1234   alumno con rutina asignada
---   sinrutina@gym.test  alumno1234   alumno sin rutina
+--   profe@gym.test         profe1234     profesor
+--   alumno01@gym.test ...  alumno1234    30 alumnos, todos con la rutina
+--   alumno30@gym.test                    "Fuerza full body"
 
 DO $$
 DECLARE
@@ -14,6 +14,14 @@ DECLARE
     v_rutina  INT;
     v_alumno  INT;
     v_ej      INT;
+    v_i       INT;
+    v_codigo  TEXT;
+    v_nombres TEXT[] := ARRAY[
+        'Ana', 'Bruno', 'Carla', 'Diego', 'Elena', 'Facundo', 'Greta', 'Hugo',
+        'Irene', 'Joaquin', 'Karina', 'Luis', 'Marta', 'Nicolas', 'Olga', 'Pedro',
+        'Quimey', 'Rosa', 'Santiago', 'Teresa', 'Ulises', 'Valeria', 'Walter', 'Ximena',
+        'Yamil', 'Zoe', 'Abril', 'Bautista', 'Ciro', 'Delfina'
+    ];
 BEGIN
     IF EXISTS (SELECT 1 FROM usuario WHERE email = 'profe@gym.test') THEN
         RAISE NOTICE 'seed: los datos de prueba ya existen, no se hace nada';
@@ -53,15 +61,21 @@ BEGIN
     INSERT INTO rutina_ejercicio (rutina_id, ejercicio_id, orden, series, descanso_segundos)
     VALUES (v_rutina, v_ej, 4, 3, 45);
 
-    INSERT INTO usuario (email, contrasena, nombre, apellido, rol)
-    VALUES ('alumno@gym.test', '$2a$10$1/zDrLMJ6Ijw75rcF2XhVe3hZvXAE.PA7QWLSWG1u/w4Abl3H0OL2', 'Ana', 'Alumna', 'alumno')
-    RETURNING id INTO v_alumno;
-    INSERT INTO alumno (usuario_id, fecha_inscripcion, tipo_plan, rutina_id)
-    VALUES (v_alumno, CURRENT_DATE, 'Mensual', v_rutina);
+    -- Misma clave bcrypt de alumno1234 para los 30. El correo alumnoNN@gym.test
+    -- identifica a cada uno; todos quedan con la rutina del profesor de prueba.
+    FOR v_i IN 1..30 LOOP
+        v_codigo := lpad(v_i::text, 2, '0');
+        INSERT INTO usuario (email, contrasena, nombre, apellido, rol)
+        VALUES (
+            'alumno' || v_codigo || '@gym.test',
+            '$2a$10$1/zDrLMJ6Ijw75rcF2XhVe3hZvXAE.PA7QWLSWG1u/w4Abl3H0OL2',
+            v_nombres[v_i],
+            'Alumno ' || v_codigo,
+            'alumno'
+        )
+        RETURNING id INTO v_alumno;
 
-    INSERT INTO usuario (email, contrasena, nombre, apellido, rol)
-    VALUES ('sinrutina@gym.test', '$2a$10$1/zDrLMJ6Ijw75rcF2XhVe3hZvXAE.PA7QWLSWG1u/w4Abl3H0OL2', 'Beto', 'Sinrutina', 'alumno')
-    RETURNING id INTO v_alumno;
-    INSERT INTO alumno (usuario_id, fecha_inscripcion, tipo_plan)
-    VALUES (v_alumno, CURRENT_DATE, 'Mensual');
+        INSERT INTO alumno (usuario_id, fecha_inscripcion, tipo_plan, rutina_id)
+        VALUES (v_alumno, CURRENT_DATE, 'Mensual', v_rutina);
+    END LOOP;
 END $$;
