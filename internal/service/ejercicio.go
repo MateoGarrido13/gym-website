@@ -60,6 +60,36 @@ func (s *EjercicioService) List(ctx context.Context) ([]Ejercicio, error) {
 	}
 	return out, nil
 }
+// Si existe, devuelve el ejercicio local.
+// Si no existe, lo crea usando los datos de wger y devuelve el ejercicio local.
+func (s *EjercicioService) FindOrCreateByNombreGrupo(ctx context.Context, nombre, grupoMuscular string, descripcion *string) (Ejercicio, error) {
+	nombre = strings.TrimSpace(nombre)
+	if nombre == "" {
+		return Ejercicio{}, fmt.Errorf("%w: nombre es obligatorio", ErrInvalid)
+	}
+	if grupoMuscular == "" {
+		grupoMuscular = "Sin categoría"
+	}
+
+	// Buscar coincidencia existente (case-insensitive).
+	existentes, err := s.List(ctx)
+	if err != nil {
+		return Ejercicio{}, err
+	}
+	for _, ex := range existentes {
+		if strings.EqualFold(nombre, ex.Nombre) &&
+			strings.EqualFold(grupoMuscular, stringValueOrEmpty(ex.GrupoMuscular)) {
+			return ex, nil
+		}
+	}
+
+	// Crear el ejercicio local para poder respetar la FK.
+	return s.Create(ctx, EjercicioInput{
+		Nombre:        nombre,
+		Descripcion:   descripcion,
+		GrupoMuscular: &grupoMuscular,
+	})
+}
 
 func (s *EjercicioService) Update(ctx context.Context, id int32, in EjercicioInput) (Ejercicio, error) {
 	if _, err := s.Get(ctx, id); err != nil {
@@ -112,6 +142,13 @@ func (s *EjercicioService) Delete(ctx context.Context, id int32) error {
 		return err
 	}
 	return s.store.DeleteEjercicio(ctx, id)
+}
+
+func stringValueOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func mapNotFound(err error) error {

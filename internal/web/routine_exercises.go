@@ -30,28 +30,49 @@ func (h *Handler) validateRoutineExerciseIDs(r *http.Request, values []string) (
 	if err != nil {
 		return nil, err
 	}
-	allowed := make(map[int32]bool, len(available))
+	localIDs := make(map[int32]bool, len(available))
 	for _, exercise := range available {
-		allowed[exercise.ID] = true
+		localIDs[exercise.ID] = true
 	}
 	selected := make([]int32, 0, len(values))
 	seen := make(map[int32]bool, len(values))
 	for _, value := range values {
 		id, err := positiveInt32(value, "La selección de ejercicios no es válida.")
-		if err != nil || seen[id] {
+		if err != nil {
 			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
 		}
-		// Si no existe en el catálogo local, intenta validar contra la API de wger.
-		if !allowed[id] && h.wgerACL != nil {
-			if wex, err := h.wgerACL.GetExerciseByID(r.Context(), int(id)); err == nil && wex != nil {
-				allowed[id] = true
-			}
-		}
-		if !allowed[id] {
+		if seen[id] {
 			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
 		}
-		selected = append(selected, id)
 		seen[id] = true
+
+		// 1) Si el ID ya existe localmente, se usa directamente.
+		if localIDs[id] {
+			selected = append(selected, id)
+			continue
+		}
+
+		// 2) Si no existe localmente, consultar wger para validar y sincronizar.
+		if h.wgerACL == nil {
+			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
+		}
+		wex, err := h.wgerACL.GetExerciseByID(r.Context(), int(id))
+		if err != nil || wex == nil {
+			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
+		}
+
+		// 3) Sincronizar el ejercicio de wger a la tabla local para respetar la FK.
+		localEx, err := h.ejercicios.FindOrCreateByNombreGrupo(
+			r.Context(), wex.Name, wex.MuscleGroup, &wex.Description,
+		)
+		if err != nil {
+			return nil, errors.New("No se pudo sincronizar el ejercicio seleccionado. Inténtalo nuevamente.")
+		}
+
+		if seen[localEx.ID] {
+			return nil, errors.New("La selección de ejercicios no es válida. Actualiza la página e inténtalo nuevamente.")
+		}
+		selected = append(selected, localEx.ID)
 	}
 	if len(selected) == 0 {
 		return nil, errors.New("No se seleccionaron ejercicios. Por favor, selecciona al menos un ejercicio.")

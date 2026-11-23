@@ -280,6 +280,20 @@ La URL base se define en `requests.hurl` (variable `base_url`, por defecto
 `http://localhost:8080`). Como las variables de `[Options]` tienen la máxima
 prioridad en Hurl, para apuntar a otro host se edita esa línea en el archivo.
 
+### Integración con wger (ejercicios externos para rutinas)
+
+El formulario de alta y edición de rutinas (`/rutinas` y `/rutinas/{id}/editar`)
+incluye un buscador HTMX que consulta la API pública de **wger**
+(`https://wger.de/api/v2/exerciseinfo/`) para seleccionar ejercicios externos:
+
+- **Ruta:** `GET /rutinas/ejercicios/buscar` (protegida, rol profesor).
+- **Componente:** `RoutineExerciseSelector` + `WgerExerciseResults` en `views/rutina_ejercicios.templ`.
+- **Capa anticorrupción:** `internal/integration/wger_acl.go` encapsula la API externa y devuelve el modelo interno `WgerExercise` (desacoplado de la respuesta JSON de wger).
+- **Búsqueda:** `hx-get` con debounce de 300 ms, umbral mínimo de 3 caracteres, filtro por español (language 4 con fallback), limpieza de HTML y orden alfabético A-Z.
+- **Validación y sincronización:** al guardar la rutina, los IDs de wger se validan y sincronizan a la tabla local `ejercicio` mediante `EjercicioService.FindOrCreateByNombreGrupo()`, respetando la foreign key `rutina_ejercicio.ejercicio_id → ejercicio(id)` sin modificar el esquema de la base de datos.
+
+La tabla `ejercicio` no se modifica: conserva su esquema original (`id`, `nombre`, `descripcion`, `grupo_muscular`).
+
 ### Interfaz web (SSR con templ)
 
 La interfaz de administración se genera en el servidor con componentes `templ`.
