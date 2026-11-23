@@ -76,6 +76,29 @@ func (s *AlumnoService) List(ctx context.Context) ([]Alumno, error) {
 	return out, nil
 }
 
+func (s *AlumnoService) ListPage(ctx context.Context, limit, offset int32) ([]Alumno, error) {
+	rows, err := s.store.ListAlumnosPagina(ctx, db.ListAlumnosPaginaParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Alumno, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, fromDBAlumnoPagina(row))
+	}
+	return out, nil
+}
+
+func (s *AlumnoService) Count(ctx context.Context) (int32, error) {
+	return s.store.CountAlumnos(ctx)
+}
+
+func (s *AlumnoService) CountAntes(ctx context.Context, id int32) (int32, error) {
+	return s.store.CountAlumnosAntesDe(ctx, id)
+}
+
 func (s *AlumnoService) Update(ctx context.Context, id int32, in AlumnoUpdateInput) (Alumno, error) {
 	if _, err := s.Get(ctx, id); err != nil {
 		return Alumno{}, err

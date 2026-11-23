@@ -20,6 +20,26 @@ FROM usuario u
 JOIN alumno a ON u.id = a.usuario_id
 ORDER BY u.id;
 
+-- name: ListAlumnosPagina :many
+SELECT
+    u.id, u.email, u.nombre, u.apellido, u.telefono, u.rol, u.created_at,
+    a.fecha_inscripcion, a.fecha_vto, a.tipo_plan, a.rutina_id
+FROM usuario u
+JOIN alumno a ON u.id = a.usuario_id
+ORDER BY u.nombre, u.apellido, u.id
+LIMIT $1 OFFSET $2;
+
+-- name: CountAlumnos :one
+SELECT COUNT(*)::int FROM alumno;
+
+-- name: CountAlumnosAntesDe :one
+SELECT COUNT(*)::int
+FROM usuario u
+JOIN alumno a ON u.id = a.usuario_id
+WHERE (u.nombre, u.apellido, u.id) < (
+    SELECT u2.nombre, u2.apellido, u2.id FROM usuario u2 WHERE u2.id = $1
+);
+
 -- name: UpdateAlumnoDetalles :exec
 UPDATE alumno
 SET fecha_vto = $1, tipo_plan = $2, rutina_id = $3

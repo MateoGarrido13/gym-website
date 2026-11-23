@@ -23,6 +23,9 @@ type AlumnoStore interface {
 	CreateAlumno(ctx context.Context, arg db.CreateAlumnoParams) (db.GetAlumnoCompletoRow, error)
 	GetAlumnoCompleto(ctx context.Context, id int32) (db.GetAlumnoCompletoRow, error)
 	ListAlumnosCompletos(ctx context.Context) ([]db.ListAlumnosCompletosRow, error)
+	ListAlumnosPagina(ctx context.Context, arg db.ListAlumnosPaginaParams) ([]db.ListAlumnosPaginaRow, error)
+	CountAlumnos(ctx context.Context) (int32, error)
+	CountAlumnosAntesDe(ctx context.Context, id int32) (int32, error)
 	UpdateAlumnoDetalles(ctx context.Context, arg db.UpdateAlumnoDetallesParams) error
 	DeleteUsuario(ctx context.Context, id int32) error
 }

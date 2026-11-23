@@ -184,6 +184,97 @@ func TestDeleteAlumno(t *testing.T) {
 	}
 }
 
+func createAlumnoConNombre(t *testing.T, nombre, apellido, marca string) db.GetAlumnoCompletoRow {
+	t.Helper()
+
+	params := db.CreateAlumnoParams{
+		Email:            fmt.Sprintf("orden-%s-%d@example.com", marca, time.Now().UnixNano()),
+		Contrasena:       "secret123",
+		Nombre:           nombre,
+		Apellido:         apellido,
+		Telefono:         sql.NullString{String: "123456789", Valid: true},
+		FechaInscripcion: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC),
+		FechaVto:         sql.NullTime{Time: time.Date(2026, 10, 10, 0, 0, 0, 0, time.UTC), Valid: true},
+		TipoPlan:         sql.NullString{String: "mensual", Valid: true},
+		RutinaID:         sql.NullInt32{Valid: false},
+	}
+
+	alumno, err := queries.CreateAlumno(ctx, params)
+	if err != nil {
+		t.Fatalf("error al crear alumno de prueba: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = queries.DeleteUsuario(ctx, alumno.ID)
+	})
+	return alumno
+}
+
+func TestListAlumnosOrdenYPagina(t *testing.T) {
+	anaMenor := createAlumnoConNombre(t, "Ana", "Perez", "menor")
+	zoe := createAlumnoConNombre(t, "Zoe", "Perez", "zoe")
+	anaMayor := createAlumnoConNombre(t, "Ana", "Perez", "mayor")
+	if anaMenor.ID >= anaMayor.ID {
+		t.Fatalf("id de Ana menor = %d, id de Ana mayor = %d", anaMenor.ID, anaMayor.ID)
+	}
+
+	const ventana int32 = 100
+	var todos []db.ListAlumnosPaginaRow
+	for offset := int32(0); ; offset += ventana {
+		filas, err := queries.ListAlumnosPagina(ctx, db.ListAlumnosPaginaParams{
+			Limit:  ventana,
+			Offset: offset,
+		})
+		if err != nil {
+			t.Fatalf("LIST paginado falló: %v", err)
+		}
+		todos = append(todos, filas...)
+		if len(filas) < int(ventana) {
+			break
+		}
+	}
+
+	indice := map[int32]int{}
+	for i, alumno := range todos {
+		indice[alumno.ID] = i
+	}
+	iAnaMenor, okMenor := indice[anaMenor.ID]
+	iAnaMayor, okMayor := indice[anaMayor.ID]
+	iZoe, okZoe := indice[zoe.ID]
+	if !okMenor || !okMayor || !okZoe {
+		t.Fatal("algún alumno de prueba no apareció en el listado ordenado")
+	}
+	if iAnaMenor >= iAnaMayor || iAnaMayor >= iZoe {
+		t.Fatalf("orden = ana menor %d, ana mayor %d, zoe %d", iAnaMenor, iAnaMayor, iZoe)
+	}
+
+	una, err := queries.ListAlumnosPagina(ctx, db.ListAlumnosPaginaParams{
+		Limit:  1,
+		Offset: int32(iAnaMayor),
+	})
+	if err != nil {
+		t.Fatalf("ventana LIMIT 1 OFFSET %d falló: %v", iAnaMayor, err)
+	}
+	if len(una) != 1 || una[0].ID != anaMayor.ID {
+		t.Fatalf("la ventana devolvió %v, se esperaba el alumno %d", idsDe(una), anaMayor.ID)
+	}
+
+	antes, err := queries.CountAlumnosAntesDe(ctx, anaMayor.ID)
+	if err != nil {
+		t.Fatalf("conteo de alumnos anteriores falló: %v", err)
+	}
+	if int(antes) != iAnaMayor {
+		t.Errorf("alumnos anteriores = %d, se esperaba el índice %d", antes, iAnaMayor)
+	}
+}
+
+func idsDe(filas []db.ListAlumnosPaginaRow) []int32 {
+	ids := make([]int32, 0, len(filas))
+	for _, fila := range filas {
+		ids = append(ids, fila.ID)
+	}
+	return ids
+}
+
 func TestListAlumnos(t *testing.T) {
 	creado := createAlumnoDePrueba(t)
 

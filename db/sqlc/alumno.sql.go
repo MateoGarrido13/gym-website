@@ -11,6 +11,33 @@ import (
 	"time"
 )
 
+const countAlumnos = `-- name: CountAlumnos :one
+SELECT COUNT(*)::int FROM alumno
+`
+
+func (q *Queries) CountAlumnos(ctx context.Context) (int32, error) {
+	row := q.db.QueryRowContext(ctx, countAlumnos)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const countAlumnosAntesDe = `-- name: CountAlumnosAntesDe :one
+SELECT COUNT(*)::int
+FROM usuario u
+JOIN alumno a ON u.id = a.usuario_id
+WHERE (u.nombre, u.apellido, u.id) < (
+    SELECT u2.nombre, u2.apellido, u2.id FROM usuario u2 WHERE u2.id = $1
+)
+`
+
+func (q *Queries) CountAlumnosAntesDe(ctx context.Context, id int32) (int32, error) {
+	row := q.db.QueryRowContext(ctx, countAlumnosAntesDe, id)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getAlumnoCompleto = `-- name: GetAlumnoCompleto :one
 SELECT
     u.id, u.email, u.nombre, u.apellido, u.telefono, u.rol, u.created_at,
@@ -111,6 +138,70 @@ func (q *Queries) ListAlumnosCompletos(ctx context.Context) ([]ListAlumnosComple
 	var items []ListAlumnosCompletosRow
 	for rows.Next() {
 		var i ListAlumnosCompletosRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Nombre,
+			&i.Apellido,
+			&i.Telefono,
+			&i.Rol,
+			&i.CreatedAt,
+			&i.FechaInscripcion,
+			&i.FechaVto,
+			&i.TipoPlan,
+			&i.RutinaID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAlumnosPagina = `-- name: ListAlumnosPagina :many
+SELECT
+    u.id, u.email, u.nombre, u.apellido, u.telefono, u.rol, u.created_at,
+    a.fecha_inscripcion, a.fecha_vto, a.tipo_plan, a.rutina_id
+FROM usuario u
+JOIN alumno a ON u.id = a.usuario_id
+ORDER BY u.nombre, u.apellido, u.id
+LIMIT $1 OFFSET $2
+`
+
+type ListAlumnosPaginaParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type ListAlumnosPaginaRow struct {
+	ID               int32          `json:"id"`
+	Email            string         `json:"email"`
+	Nombre           string         `json:"nombre"`
+	Apellido         string         `json:"apellido"`
+	Telefono         sql.NullString `json:"telefono"`
+	Rol              string         `json:"rol"`
+	CreatedAt        sql.NullTime   `json:"created_at"`
+	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime   `json:"fecha_vto"`
+	TipoPlan         sql.NullString `json:"tipo_plan"`
+	RutinaID         sql.NullInt32  `json:"rutina_id"`
+}
+
+func (q *Queries) ListAlumnosPagina(ctx context.Context, arg ListAlumnosPaginaParams) ([]ListAlumnosPaginaRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAlumnosPagina, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAlumnosPaginaRow
+	for rows.Next() {
+		var i ListAlumnosPaginaRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Email,

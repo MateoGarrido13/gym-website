@@ -64,3 +64,7 @@ func fromDBAlumno(row db.GetAlumnoCompletoRow) Alumno {
 func fromDBAlumnoList(row db.ListAlumnosCompletosRow) Alumno {
 	return fromAlumnoRow(row.ID, row.Email, row.Nombre, row.Apellido, row.Rol, row.Telefono, row.CreatedAt, row.FechaInscripcion, row.FechaVto, row.TipoPlan, row.RutinaID)
 }
+
+func fromDBAlumnoPagina(row db.ListAlumnosPaginaRow) Alumno {
+	return fromAlumnoRow(row.ID, row.Email, row.Nombre, row.Apellido, row.Rol, row.Telefono, row.CreatedAt, row.FechaInscripcion, row.FechaVto, row.TipoPlan, row.RutinaID)
+}
