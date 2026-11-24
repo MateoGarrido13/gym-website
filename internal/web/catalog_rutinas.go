@@ -54,14 +54,14 @@ func (res rutinasResource) FormOptions(r *http.Request, page *views.PageData, va
 	}
 	page.ExerciseOptions = exercises
 	page.SelectedExercises = values.SelectedExercises
-	page.SelectedWgerExercises = res.resolveWgerOptions(r, values.SelectedExercises)
+	page.SelectedWgerExercises = res.resolveWgerOptions(r, values.SelectedExercises, values.ExerciseParams)
 	return nil
 }
 
 // resolveWgerOptions convierte una lista de IDs (strings) en opciones de vista
 // para el componente de wger. Primero intenta resolver contra el catálogo local;
 // si no existe, consulta la API de wger (si el ACL está disponible).
-func (res rutinasResource) resolveWgerOptions(r *http.Request, ids []string) []views.WgerExerciseOption {
+func (res rutinasResource) resolveWgerOptions(r *http.Request, ids []string, params map[string]views.ExerciseParams) []views.WgerExerciseOption {
 	options := make([]views.WgerExerciseOption, 0, len(ids))
 	seen := make(map[int32]bool, len(ids))
 	for _, value := range ids {
@@ -81,22 +81,22 @@ func (res rutinasResource) resolveWgerOptions(r *http.Request, ids []string) []v
 			if ex.GrupoMuscular != nil {
 				muscle = *ex.GrupoMuscular
 			}
-			options = append(options, views.WgerExerciseOption{
+			options = append(options, withParams(views.WgerExerciseOption{
 				ID:          int(ex.ID),
 				Name:        ex.Nombre,
 				MuscleGroup: muscle,
-			})
+			}, params[value]))
 			continue
 		}
 
 		// 2) Si no existe localmente, consulta la API de wger.
 		if res.h.wgerACL != nil {
 			if wex, err := res.h.wgerACL.GetExerciseByID(r.Context(), int(id32)); err == nil && wex != nil {
-				options = append(options, views.WgerExerciseOption{
+				options = append(options, withParams(views.WgerExerciseOption{
 					ID:          wex.ID,
 					Name:        wex.Name,
 					MuscleGroup: wex.MuscleGroup,
-				})
+				}, params[value]))
 			}
 		}
 	}
@@ -117,14 +117,21 @@ func (res rutinasResource) EditValues(r *http.Request, id int32) (views.FormValu
 	if err != nil {
 		return views.FormValues{}, err
 	}
+	values.ExerciseParams = make(map[string]views.ExerciseParams, len(exercises))
 	for _, exercise := range exercises {
-		values.SelectedExercises = append(values.SelectedExercises, strconv.FormatInt(int64(exercise.EjercicioID), 10))
+		key := strconv.FormatInt(int64(exercise.EjercicioID), 10)
+		values.SelectedExercises = append(values.SelectedExercises, key)
+		values.ExerciseParams[key] = views.ExerciseParams{
+			Series:       intPtrText(exercise.Series),
+			Repeticiones: intPtrText(exercise.Repeticiones),
+			Descanso:     intPtrText(exercise.DescansoSegundos),
+		}
 	}
 	return values, nil
 }
 
 // formValues valida los campos del formulario de rutinas.
-func (res rutinasResource) formValues(r *http.Request, values views.FormValues) (weeks, professorID int32, exerciseIDs []int32, err error) {
+func (res rutinasResource) formValues(r *http.Request, values views.FormValues) (weeks, professorID int32, exerciseIDs []routineExercise, err error) {
 	weeks, err = positiveInt32(values.DuracionSemanas, "La duración debe ser un número mayor que cero.")
 	if err != nil {
 		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
@@ -133,8 +140,24 @@ func (res rutinasResource) formValues(r *http.Request, values views.FormValues) 
 	if err != nil {
 		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
 	}
-	exerciseIDs, err = res.h.validateRoutineExerciseIDs(r, values.SelectedExercises)
+	ids, err := res.h.validateRoutineExerciseIDs(r, values.SelectedExercises)
 	if err != nil {
+		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
+	}
+	// ids[i] corresponde a SelectedExercises[i]
+	exerciseIDs = make([]routineExercise, 0, len(ids))
+	for i, id := range ids {
+		params := values.ExerciseParams[values.SelectedExercises[i]]
+		series, err := optionalPositiveInt32(params.Series, "Las series deben ser un número mayor que cero.")
+		if err == nil {
+			var reps, rest *int32
+			if reps, err = optionalPositiveInt32(params.Repeticiones, "Las repeticiones deben ser un número mayor que cero."); err == nil {
+				if rest, err = optionalPositiveInt32(params.Descanso, "El descanso debe ser un número mayor que cero."); err == nil {
+					exerciseIDs = append(exerciseIDs, routineExercise{ID: id, Series: series, Repeticiones: reps, Descanso: rest})
+					continue
+				}
+			}
+		}
 		return 0, 0, nil, &formError{err.Error(), http.StatusBadRequest}
 	}
 	return weeks, professorID, exerciseIDs, nil
@@ -175,4 +198,16 @@ func (res rutinasResource) Update(r *http.Request, id int32, values views.FormVa
 
 func (res rutinasResource) Delete(r *http.Request, id int32) error {
 	return res.h.rutinas.Delete(r.Context(), id)
+}
+
+func withParams(opt views.WgerExerciseOption, p views.ExerciseParams) views.WgerExerciseOption {
+	opt.Series, opt.Repeticiones, opt.Descanso = p.Series, p.Repeticiones, p.Descanso
+	return opt
+}
+
+func intPtrText(v *int32) string {
+	if v == nil {
+		return ""
+	}
+	return strconv.FormatInt(int64(*v), 10)
 }

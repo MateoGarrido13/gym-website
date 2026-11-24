@@ -34,10 +34,10 @@ templ AlumnosList(data PageData) {
 		if data.Offset > 0 || data.Offset+data.Limit < data.Total {
 			<nav class="pager" aria-label="Páginas">
 				if data.Offset > 0 {
-					<a class="button button-secondary" href={ alumnosPageHref(data.Limit, previousOffset(data.Offset, data.Limit)) }>Anterior</a>
+					<a class="button button-secondary" href={ alumnosPageHref(data.Limit, previousOffset(data.Offset, data.Limit)) } hx-get={ alumnosPageHref(data.Limit, previousOffset(data.Offset, data.Limit)) } hx-target="#entity-list" hx-swap="outerHTML" hx-push-url="true">Anterior</a>
 				}
 				if data.Offset+data.Limit < data.Total {
-					<a class="button button-secondary" href={ alumnosPageHref(data.Limit, data.Offset+data.Limit) }>Siguiente</a>
+					<a class="button button-secondary" href={ alumnosPageHref(data.Limit, data.Offset+data.Limit) } hx-get={ alumnosPageHref(data.Limit, data.Offset+data.Limit) } hx-target="#entity-list" hx-swap="outerHTML" hx-push-url="true">Siguiente</a>
 				}
 			</nav>
 		}

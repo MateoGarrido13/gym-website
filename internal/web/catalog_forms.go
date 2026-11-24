@@ -58,6 +58,14 @@ func (h *Handler) readCatalogForm(w http.ResponseWriter, r *http.Request, kind s
 		RutinaID:          strings.TrimSpace(r.FormValue("rutina_id")),
 		SelectedExercises: append([]string(nil), r.Form["ejercicio_id"]...),
 	}
+	values.ExerciseParams = make(map[string]views.ExerciseParams, len(values.SelectedExercises))
+	for _, id := range values.SelectedExercises {
+		values.ExerciseParams[id] = views.ExerciseParams{
+			Series:       strings.TrimSpace(r.FormValue("series_" + id)),
+			Repeticiones: strings.TrimSpace(r.FormValue("repeticiones_" + id)),
+			Descanso:     strings.TrimSpace(r.FormValue("descanso_" + id)),
+		}
+	}
 	return resource, values, true
 }
 

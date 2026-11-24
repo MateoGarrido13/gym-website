@@ -33,6 +33,11 @@ type FormValues struct {
 	MaxAlumnos        string
 	RutinaID          string
 	SelectedExercises []string
+	ExerciseParams map[string]ExerciseParams
+}
+
+type ExerciseParams struct {
+	Series, Repeticiones, Descanso string
 }
 
 type PageData struct {

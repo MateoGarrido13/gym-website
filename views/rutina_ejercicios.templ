@@ -7,6 +7,9 @@ type WgerExerciseOption struct {
 	ID          int
 	Name        string
 	MuscleGroup string
+	Series       string
+	Repeticiones string
+	Descanso     string
 }
 
 // RoutineExerciseSelector renderiza el buscador HTMX y el contenedor scrollable de resultados.
@@ -98,6 +101,17 @@ templ WgerExerciseResultsChecked(options []WgerExerciseOption, checked bool) {
 							}
 						</span>
 					</label>
+					<div class="exercise-params">
+						<label>Series
+							<input type="number" min="1" name={ "series_" + strconv.Itoa(opt.ID) } value={ opt.Series } placeholder="—"/>
+						</label>
+						<label>Reps
+							<input type="number" min="1" name={ "repeticiones_" + strconv.Itoa(opt.ID) } value={ opt.Repeticiones } placeholder="—"/>
+						</label>
+						<label>Descanso (s)
+							<input type="number" min="1" name={ "descanso_" + strconv.Itoa(opt.ID) } value={ opt.Descanso } placeholder="—"/>
+						</label>
+					</div>
 				</li>
 			}
 		</ul>

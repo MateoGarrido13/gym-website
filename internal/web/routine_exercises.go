@@ -80,22 +80,25 @@ func (h *Handler) validateRoutineExerciseIDs(r *http.Request, values []string) (
 	return selected, nil
 }
 
-func (h *Handler) syncRoutineExercises(r *http.Request, routineID int32, selected []int32) error {
+type routineExercise struct {
+	ID           int32
+	Series       *int32
+	Repeticiones *int32
+	Descanso     *int32
+}
+
+func (h *Handler) syncRoutineExercises(r *http.Request, routineID int32, selected []routineExercise) error {
 	current, err := h.rutinaEjercicios.List(r.Context(), routineID)
 	if err != nil {
 		return err
 	}
-	existing := make(map[int32]service.RutinaEjercicio, len(current))
-	var maxOrder int32
+	existing := make(map[int32]bool, len(current))
 	for _, item := range current {
-		existing[item.EjercicioID] = item
-		if item.Orden > maxOrder {
-			maxOrder = item.Orden
-		}
+		existing[item.EjercicioID] = true
 	}
 	wanted := make(map[int32]bool, len(selected))
-	for _, exerciseID := range selected {
-		wanted[exerciseID] = true
+	for _, ex := range selected {
+		wanted[ex.ID] = true
 	}
 	for exerciseID := range existing {
 		if !wanted[exerciseID] {
@@ -104,14 +107,18 @@ func (h *Handler) syncRoutineExercises(r *http.Request, routineID int32, selecte
 			}
 		}
 	}
-	for _, exerciseID := range selected {
-		if _, alreadyAdded := existing[exerciseID]; alreadyAdded {
+	for i, ex := range selected {
+		orden := int32(i + 1)
+		if existing[ex.ID] {
+			if _, err := h.rutinaEjercicios.Update(r.Context(), routineID, ex.ID, service.RutinaEjercicioUpdateInput{
+				Orden: orden, Series: ex.Series, Repeticiones: ex.Repeticiones, DescansoSegundos: ex.Descanso,
+			}); err != nil {
+				return err
+			}
 			continue
 		}
-		maxOrder++
 		if _, err := h.rutinaEjercicios.Create(r.Context(), routineID, service.RutinaEjercicioCreateInput{
-			EjercicioID: exerciseID,
-			Orden:       maxOrder,
+			EjercicioID: ex.ID, Orden: orden, Series: ex.Series, Repeticiones: ex.Repeticiones, DescansoSegundos: ex.Descanso,
 		}); err != nil {
 			return err
 		}

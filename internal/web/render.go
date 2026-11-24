@@ -12,6 +12,26 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, page views.Page
 	h.renderStatus(w, r, page, http.StatusOK)
 }
 
+// renderAlumnosList devuelve solo el panel de la lista (paginado HTMX).
+func (h *Handler) renderAlumnosList(w http.ResponseWriter, r *http.Request) {
+	page, err := h.catalogPage(r, "alumnos", catalogView{})
+	if err != nil {
+		log.Printf("no se pudo cargar la lista de alumnos: %v", err)
+		http.Error(w, "No se pudieron cargar los registros.", http.StatusInternalServerError)
+		return
+	}
+	var output bytes.Buffer
+	if err := views.AlumnosList(page).Render(r.Context(), &output); err != nil {
+		log.Printf("no se pudo renderizar la lista de alumnos: %v", err)
+		http.Error(w, "No se pudo renderizar la lista.", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if _, err := output.WriteTo(w); err != nil {
+		log.Printf("no se pudo escribir la lista de alumnos: %v", err)
+	}
+}
+
 // renderNewRow renderiza la fila del registro recién creado, más dos
 // fragmentos hx-swap-oob en la misma respuesta: el contador actualizado y
 // la orden de borrar la fila de "vacío" (si ya no está, no hace nada).

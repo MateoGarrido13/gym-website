@@ -47,6 +47,10 @@ func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Alumnos(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("HX-Request") == "true" {
+		h.renderAlumnosList(w, r) // paginado: solo la lista
+		return
+	}
 	h.showCatalog(w, r, "alumnos", catalogView{})
 }
 

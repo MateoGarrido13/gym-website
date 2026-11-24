@@ -179,3 +179,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .exercise-option-label { display: flex; align-items: center; gap: 10px; padding: 9px 0; cursor: pointer; font-size: 14px; }
 .exercise-option-label input { flex: 0 0 auto; width: 16px; height: 16px; accent-color: var(--green); }
 .exercise-option-label small { color: var(--muted); }
+.exercise-params { display: none; gap: 10px; flex-wrap: wrap; padding: 0 0 10px 26px; }
+.exercise-selected .exercise-params { display: flex; }
+.exercise-params label { display: grid; gap: 2px; color: var(--muted); font-size: 12px; }
+.exercise-params input { width: 90px; min-height: 32px; padding: 4px 8px; border: 1px solid #cbd5cc; border-radius: 5px; background: #fff; }
