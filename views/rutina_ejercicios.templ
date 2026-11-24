@@ -12,8 +12,8 @@ type WgerExerciseOption struct {
 // RoutineExerciseSelector renderiza el buscador HTMX y el contenedor scrollable de resultados.
 // Se invoca desde form_rutinas.templ dentro del formulario de alta/edición de rutinas.
 templ RoutineExerciseSelector(selected []WgerExerciseOption) {
-	<div class="routine-exercise-selector">
-		<label for="wger-exercise-search">Buscar ejercicios (API wger)</label>
+	<div class="routine-exercise-selector field-wide">
+		<label class="routine-search-label" for="wger-exercise-search">Buscar ejercicios (API wger)</label>
 		<input
 			id="wger-exercise-search"
 			type="search"
@@ -27,33 +27,69 @@ templ RoutineExerciseSelector(selected []WgerExerciseOption) {
 			oninput="const v = this.value.trim(); if (v.length > 0 && v.length < 3) event.stopImmediatePropagation();"
 		/>
 
+		<div id="rutina-ejercicios-seleccionados" class="exercise-selected">
+			if len(selected) > 0 {
+				<p class="exercise-section-title">Ejercicios seleccionados</p>
+				@WgerExerciseResultsChecked(selected, true)
+			}
+		</div>
+
 		<div
 			id="rutina-ejercicios-resultados"
 			class="exercise-results-scroll"
-			style="max-height: 260px; overflow-y: auto; border: 1px solid #ccc; margin-top: 0.5rem; padding: 0.5rem;"
 		>
-			if len(selected) > 0 {
-				@WgerExerciseResults(selected)
-			} else {
-				<p class="muted">Ingresá al menos 3 caracteres para buscar ejercicios disponibles.</p>
-			}
+			<p class="empty-results">Ingresá al menos 3 caracteres para buscar ejercicios disponibles.</p>
 		</div>
+		<script>
+			(function () {
+				const sel = document.getElementById("rutina-ejercicios-seleccionados");
+				const res = document.getElementById("rutina-ejercicios-resultados");
+				if (!sel || !res || res.dataset.bound) return;
+				res.dataset.bound = "1";
+				// Al marcar un resultado, se mueve a la lista de seleccionados para que persista entre búsquedas.
+				res.addEventListener("change", function (e) {
+					const cb = e.target;
+					if (!(cb instanceof HTMLInputElement) || cb.name !== "ejercicio_id" || !cb.checked) return;
+					const li = cb.closest("li");
+					let ul = sel.querySelector("ul");
+					if (!ul) {
+						ul = document.createElement("ul");
+						ul.className = "exercise-option-list";
+						sel.appendChild(ul);
+					}
+					if (li) ul.appendChild(li);
+				});
+				// Tras cada búsqueda, se ocultan los resultados ya seleccionados para no duplicarlos.
+				document.body.addEventListener("htmx:afterSwap", function (e) {
+					if (e.detail.target !== res) return;
+					const chosen = new Set(Array.from(sel.querySelectorAll("input[name=ejercicio_id]")).map(i => i.value));
+					res.querySelectorAll("input[name=ejercicio_id]").forEach(i => {
+						if (chosen.has(i.value)) i.closest("li")?.remove();
+					});
+				});
+			})();
+		</script>
 	</div>
 }
 
 // WgerExerciseResults renderiza únicamente el fragmento interno que HTMX inyecta vía innerHTML.
 templ WgerExerciseResults(options []WgerExerciseOption) {
+	@WgerExerciseResultsChecked(options, false)
+}
+
+templ WgerExerciseResultsChecked(options []WgerExerciseOption, checked bool) {
 	if len(options) == 0 {
 		<p class="empty-results">No se encontraron resultados</p>
 	} else {
-		<ul class="exercise-option-list" style="list-style: none; margin: 0; padding: 0;">
+		<ul class="exercise-option-list">
 			for _, opt := range options {
-				<li class="exercise-option-item" style="padding: 0.35rem 0; border-bottom: 1px solid #eee;">
-					<label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+				<li class="exercise-option-item">
+					<label class="exercise-option-label">
 						<input
 							type="checkbox"
 							name="ejercicio_id"
 							value={ strconv.Itoa(opt.ID) }
+							checked?={ checked }
 						/>
 						<span>
 							<strong>{ opt.Name }</strong>

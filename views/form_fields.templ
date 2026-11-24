@@ -31,7 +31,7 @@ templ IdentityFields(data PageData) {
 templ PlanFields(data PageData) {
 	<label class="field">
 		<span>Tipo de plan</span>
-		<select name="tipo_plan">
+		<select name="tipo_plan" id="tipo_plan" onchange="previewVto(this.value)">
 			<option value="" if data.FormValues.TipoPlan == "" { selected }>Seleccionar plan</option>
 			<option value="Mensual" if data.FormValues.TipoPlan == "Mensual" { selected }>Mensual</option>
 			<option value="Trimestral" if data.FormValues.TipoPlan == "Trimestral" { selected }>Trimestral</option>
@@ -40,8 +40,19 @@ templ PlanFields(data PageData) {
 	</label>
 	<label class="field">
 		<span>Fecha de vencimiento</span>
-		<input type="date" name="fecha_vto" value={ data.FormValues.FechaVto }/>
+		<input type="date" id="fecha_vto_preview" value={ data.FormValues.FechaVto } readonly disabled/>
+		<small>Se calcula automáticamente según el plan elegido.</small>
 	</label>
+	<script>
+		function previewVto(plan) {
+			var meses = { Mensual: 1, Trimestral: 3, Anual: 12 }[plan];
+			var el = document.getElementById("fecha_vto_preview");
+			if (!meses) { el.value = ""; return; }
+			var d = new Date();
+			d.setMonth(d.getMonth() + meses);
+			el.value = d.toISOString().slice(0, 10);
+		}
+	</script>
 }
 
 // ProfesorSelect lo usan rutinas y clases.

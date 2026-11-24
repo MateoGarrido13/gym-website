@@ -37,22 +37,21 @@ func RoutineExerciseSelector(selected []WgerExerciseOption) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"routine-exercise-selector\"><label for=\"wger-exercise-search\">Buscar ejercicios (API wger)</label> <input id=\"wger-exercise-search\" type=\"search\" name=\"q\" placeholder=\"Escribí al menos 3 caracteres (ej. Press, Sentadilla)...\" autocomplete=\"off\" hx-get=\"/rutinas/ejercicios/buscar\" hx-trigger=\"keyup changed delay:300ms\" hx-target=\"#rutina-ejercicios-resultados\" hx-swap=\"innerHTML\" oninput=\"const v = this.value.trim(); if (v.length > 0 && v.length < 3) event.stopImmediatePropagation();\"><div id=\"rutina-ejercicios-resultados\" class=\"exercise-results-scroll\" style=\"max-height: 260px; overflow-y: auto; border: 1px solid #ccc; margin-top: 0.5rem; padding: 0.5rem;\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"routine-exercise-selector field-wide\"><label class=\"routine-search-label\" for=\"wger-exercise-search\">Buscar ejercicios (API wger)</label> <input id=\"wger-exercise-search\" type=\"search\" name=\"q\" placeholder=\"Escribí al menos 3 caracteres (ej. Press, Sentadilla)...\" autocomplete=\"off\" hx-get=\"/rutinas/ejercicios/buscar\" hx-trigger=\"keyup changed delay:300ms\" hx-target=\"#rutina-ejercicios-resultados\" hx-swap=\"innerHTML\" oninput=\"const v = this.value.trim(); if (v.length > 0 && v.length < 3) event.stopImmediatePropagation();\"><div id=\"rutina-ejercicios-seleccionados\" class=\"exercise-selected\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(selected) > 0 {
-			templ_7745c5c3_Err = WgerExerciseResults(selected).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"exercise-section-title\">Ejercicios seleccionados</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<p class=\"muted\">Ingresá al menos 3 caracteres para buscar ejercicios disponibles.</p>")
+			templ_7745c5c3_Err = WgerExerciseResultsChecked(selected, true).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div id=\"rutina-ejercicios-resultados\" class=\"exercise-results-scroll\"><p class=\"empty-results\">Ingresá al menos 3 caracteres para buscar ejercicios disponibles.</p></div><script>\n\t\t\t(function () {\n\t\t\t\tconst sel = document.getElementById(\"rutina-ejercicios-seleccionados\");\n\t\t\t\tconst res = document.getElementById(\"rutina-ejercicios-resultados\");\n\t\t\t\tif (!sel || !res || res.dataset.bound) return;\n\t\t\t\tres.dataset.bound = \"1\";\n\t\t\t\t// Al marcar un resultado, se mueve a la lista de seleccionados para que persista entre búsquedas.\n\t\t\t\tres.addEventListener(\"change\", function (e) {\n\t\t\t\t\tconst cb = e.target;\n\t\t\t\t\tif (!(cb instanceof HTMLInputElement) || cb.name !== \"ejercicio_id\" || !cb.checked) return;\n\t\t\t\t\tconst li = cb.closest(\"li\");\n\t\t\t\t\tlet ul = sel.querySelector(\"ul\");\n\t\t\t\t\tif (!ul) {\n\t\t\t\t\t\tul = document.createElement(\"ul\");\n\t\t\t\t\t\tul.className = \"exercise-option-list\";\n\t\t\t\t\t\tsel.appendChild(ul);\n\t\t\t\t\t}\n\t\t\t\t\tif (li) ul.appendChild(li);\n\t\t\t\t});\n\t\t\t\t// Tras cada búsqueda, se ocultan los resultados ya seleccionados para no duplicarlos.\n\t\t\t\tdocument.body.addEventListener(\"htmx:afterSwap\", function (e) {\n\t\t\t\t\tif (e.detail.target !== res) return;\n\t\t\t\t\tconst chosen = new Set(Array.from(sel.querySelectorAll(\"input[name=ejercicio_id]\")).map(i => i.value));\n\t\t\t\t\tres.querySelectorAll(\"input[name=ejercicio_id]\").forEach(i => {\n\t\t\t\t\t\tif (chosen.has(i.value)) i.closest(\"li\")?.remove();\n\t\t\t\t\t});\n\t\t\t\t});\n\t\t\t})();\n\t\t</script></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -78,72 +77,107 @@ func WgerExerciseResults(options []WgerExerciseOption) templ.Component {
 		}
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = WgerExerciseResultsChecked(options, false).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func WgerExerciseResultsChecked(options []WgerExerciseOption, checked bool) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		ctx = templ.ClearChildren(ctx)
 		if len(options) == 0 {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"empty-results\">No se encontraron resultados</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<ul class=\"exercise-option-list\" style=\"list-style: none; margin: 0; padding: 0;\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<ul class=\"exercise-option-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, opt := range options {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<li class=\"exercise-option-item\" style=\"padding: 0.35rem 0; border-bottom: 1px solid #eee;\"><label style=\"display: flex; align-items: center; gap: 0.5rem; cursor: pointer;\"><input type=\"checkbox\" name=\"ejercicio_id\" value=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(opt.ID)).Resolve(ctx)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/rutina_ejercicios.templ`, Line: 56, Col: 35}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"> <span><strong>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<li class=\"exercise-option-item\"><label class=\"exercise-option-label\"><input type=\"checkbox\" name=\"ejercicio_id\" value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
-				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Name)
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression(strconv.Itoa(opt.ID)).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/rutina_ejercicios.templ`, Line: 59, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/rutina_ejercicios.templ`, Line: 91, Col: 35}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</strong> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if checked {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " checked")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "> <span><strong>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(opt.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/rutina_ejercicios.templ`, Line: 95, Col: 25}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</strong> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if opt.MuscleGroup != "" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<small>(")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<small>(")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var5 string
-					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(opt.MuscleGroup)
+					var templ_7745c5c3_Var6 string
+					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(opt.MuscleGroup)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/rutina_ejercicios.templ`, Line: 61, Col: 34}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/rutina_ejercicios.templ`, Line: 97, Col: 34}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, ")</small>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, ")</small>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></label></li>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></label></li>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</ul>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</ul>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

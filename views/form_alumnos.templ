@@ -3,8 +3,8 @@ package views
 templ AlumnoCreateFields(data PageData) {
 	@IdentityFields(data)
 	<label class="field">
-		<span>Fecha de inscripción <b class="required-mark">*</b></span>
-		<input type="date" name="fecha_inscripcion" value={ data.FormValues.FechaInscripcion } required/>
+		<span>Fecha de inicio</span>
+		<input type="date" value={ data.FormValues.FechaInscripcion } readonly disabled/>
 	</label>
 	@PlanFields(data)
 }

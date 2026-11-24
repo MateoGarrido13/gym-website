@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	db "PRACTICO_DOS/db/sqlc"
 	"PRACTICO_DOS/internal/service"
@@ -58,9 +59,9 @@ func (res alumnosResource) Entities(r *http.Request) ([]views.Entity, error) {
 	entities := make([]views.Entity, 0, len(items))
 	for _, item := range items {
 		detail := ""
-	if item.TipoPlan != nil {
-		detail = string(*item.TipoPlan)
-	}
+		if item.TipoPlan != nil {
+			detail = string(*item.TipoPlan)
+		}
 		if item.FechaVto != nil {
 			if detail != "" {
 				detail += " · "
@@ -120,6 +121,26 @@ func tipoPlanFromForm(s string) (*db.EnumTipoPlan, error) {
 	return &tp, nil
 }
 
+// planExpiry devuelve la fecha de vencimiento según el plan, contada desde from.
+func planExpiry(plan *db.EnumTipoPlan, from time.Time) *string {
+	if plan == nil {
+		return nil
+	}
+	var t time.Time
+	switch *plan {
+	case db.EnumTipoPlanMensual:
+		t = from.AddDate(0, 1, 0)
+	case db.EnumTipoPlanTrimestral:
+		t = from.AddDate(0, 3, 0)
+	case db.EnumTipoPlanAnual:
+		t = from.AddDate(1, 0, 0)
+	default:
+		return nil
+	}
+	s := t.Format(time.DateOnly)
+	return &s
+}
+
 func (res alumnosResource) Create(r *http.Request, values views.FormValues) error {
 	_, err := res.insert(r, values)
 	return err
@@ -140,8 +161,8 @@ func (res alumnosResource) insert(r *http.Request, values views.FormValues) (ser
 		Nombre:           values.Nombre,
 		Apellido:         values.Apellido,
 		Telefono:         optional(values.Telefono),
-		FechaInscripcion: values.FechaInscripcion,
-		FechaVto:         optional(values.FechaVto),
+		FechaInscripcion: time.Now().Format(time.DateOnly),
+		FechaVto:         planExpiry(tipoPlan, time.Now()),
 		TipoPlan:         tipoPlan,
 	})
 }
@@ -156,8 +177,18 @@ func (res alumnosResource) Update(r *http.Request, id int32, values views.FormVa
 		return &formError{err.Error(), http.StatusBadRequest}
 	}
 
+	current, err := res.h.alumnos.Get(r.Context(), id)
+	if err != nil {
+		return err
+	}
+	// El vencimiento solo se recalcula si cambia el plan; si no, se conserva.
+	fechaVto := current.FechaVto
+	if tipoPlan == nil || current.TipoPlan == nil || *tipoPlan != *current.TipoPlan {
+		fechaVto = planExpiry(tipoPlan, time.Now())
+	}
+
 	_, err = res.h.alumnos.Update(r.Context(), id, service.AlumnoUpdateInput{
-		FechaVto: optional(values.FechaVto),
+		FechaVto: fechaVto,
 		TipoPlan: tipoPlan,
 		RutinaID: routineID,
 	})

@@ -10,7 +10,7 @@ templ Layout(title string, active string, userName string, userRol string) {
 	<meta name="theme-color" content="#111b18" />
 	<title>{ title + " | Gym Web" }</title>
 	<link rel="stylesheet" href="/static/styles.css" />
-	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script> //HTMX
+	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
 	<!-- Por defecto HTMX 2 descarta respuestas 4xx/5xx; acá le decimos que haga swap con cualquier código para poder mostrar errores de formulario -->
 	<meta name="htmx-config" content='{"responseHandling":[{"code":"...","swap":true}]}' />
 </head>
