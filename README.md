@@ -92,7 +92,7 @@ erDiagram
         int usuario_id PK,FK
         date fecha_inscripcion
         date fecha_vto
-        varchar tipo_plan
+        enum_tipo_plan tipo_plan
         int rutina_id FK
     }
 
@@ -311,7 +311,7 @@ curl -s -X POST http://localhost:8080/api/ejercicios \
   -d '{"nombre":"sentadilla","descripcion":"barra","grupo_muscular":"piernas"}'
 curl -s -X POST http://localhost:8080/api/alumnos \
   -H 'Content-Type: application/json' \
-  -d '{"email":"a@example.com","contrasena":"secret123","nombre":"Ana","apellido":"Lopez","fecha_inscripcion":"2026-09-10","tipo_plan":"mensual"}'
+  -d '{"email":"a@example.com","contrasena":"secret123","nombre":"Ana","apellido":"Lopez","fecha_inscripcion":"2026-09-10","tipo_plan":"Mensual"}'
 ```
 
 Esos `curl` pegan al servidor que dejó `make run-app`; al cortarlo se borran contenedores y volúmenes.

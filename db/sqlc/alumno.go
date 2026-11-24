@@ -15,7 +15,7 @@ type CreateAlumnoParams struct {
 	Telefono         sql.NullString `json:"telefono"`
 	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
 	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
+	TipoPlan         NullEnumTipoPlan `json:"tipo_plan"`
 	RutinaID         sql.NullInt32  `json:"rutina_id"`
 }
 

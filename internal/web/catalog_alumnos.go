@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
+	db "PRACTICO_DOS/db/sqlc"
 	"PRACTICO_DOS/internal/service"
 	"PRACTICO_DOS/views"
 )
@@ -55,7 +57,10 @@ func (res alumnosResource) Entities(r *http.Request) ([]views.Entity, error) {
 	}
 	entities := make([]views.Entity, 0, len(items))
 	for _, item := range items {
-		detail := stringValue(item.TipoPlan)
+		detail := ""
+	if item.TipoPlan != nil {
+		detail = string(*item.TipoPlan)
+	}
 		if item.FechaVto != nil {
 			if detail != "" {
 				detail += " · "
@@ -89,14 +94,30 @@ func (res alumnosResource) EditValues(r *http.Request, id int32) (views.FormValu
 	if err != nil {
 		return views.FormValues{}, err
 	}
+	var tipoPlanStr string
+	if item.TipoPlan != nil {
+		tipoPlanStr = string(*item.TipoPlan)
+	}
 	values := views.FormValues{
-		TipoPlan: stringValue(item.TipoPlan),
+		TipoPlan: tipoPlanStr,
 		FechaVto: stringValue(item.FechaVto),
 	}
 	if item.RutinaID != nil {
 		values.RutinaID = strconv.FormatInt(int64(*item.RutinaID), 10)
 	}
 	return values, nil
+}
+
+// tipoPlanFromForm convierte el string del formulario a *db.EnumTipoPlan validando que sea un valor permitido del enum.
+func tipoPlanFromForm(s string) (*db.EnumTipoPlan, error) {
+	if strings.TrimSpace(s) == "" {
+		return nil, nil
+	}
+	tp, err := service.ParseTipoPlan(s)
+	if err != nil {
+		return nil, err
+	}
+	return &tp, nil
 }
 
 func (res alumnosResource) Create(r *http.Request, values views.FormValues) error {
@@ -108,6 +129,11 @@ func (res alumnosResource) insert(r *http.Request, values views.FormValues) (ser
 	if err := validateIdentity(values); err != nil {
 		return service.Alumno{}, &formError{err.Error(), http.StatusBadRequest}
 	}
+	tipoPlan, err := tipoPlanFromForm(values.TipoPlan)
+	if err != nil {
+		return service.Alumno{}, &formError{err.Error(), http.StatusBadRequest}
+	}
+
 	return res.h.alumnos.Create(r.Context(), service.AlumnoCreateInput{
 		Email:            values.Email,
 		Contrasena:       values.Contrasena,
@@ -116,7 +142,7 @@ func (res alumnosResource) insert(r *http.Request, values views.FormValues) (ser
 		Telefono:         optional(values.Telefono),
 		FechaInscripcion: values.FechaInscripcion,
 		FechaVto:         optional(values.FechaVto),
-		TipoPlan:         optional(values.TipoPlan),
+		TipoPlan:         tipoPlan,
 	})
 }
 
@@ -125,9 +151,14 @@ func (res alumnosResource) Update(r *http.Request, id int32, values views.FormVa
 	if err != nil {
 		return &formError{err.Error(), http.StatusBadRequest}
 	}
+	tipoPlan, err := tipoPlanFromForm(values.TipoPlan)
+	if err != nil {
+		return &formError{err.Error(), http.StatusBadRequest}
+	}
+
 	_, err = res.h.alumnos.Update(r.Context(), id, service.AlumnoUpdateInput{
 		FechaVto: optional(values.FechaVto),
-		TipoPlan: optional(values.TipoPlan),
+		TipoPlan: tipoPlan,
 		RutinaID: routineID,
 	})
 	return err

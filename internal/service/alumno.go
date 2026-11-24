@@ -34,6 +34,11 @@ func (s *AlumnoService) Create(ctx context.Context, in AlumnoCreateInput) (Alumn
 		return Alumno{}, fmt.Errorf("%w: fecha_vto debe ser YYYY-MM-DD", ErrInvalid)
 	}
 
+	tipoPlan := toNullEnumTipoPlan(in.TipoPlan)
+	if err != nil {
+		return Alumno{}, err
+	}
+
 	hash, err := hashPassword(in.Contrasena)
 	if err != nil {
 		return Alumno{}, err
@@ -47,7 +52,7 @@ func (s *AlumnoService) Create(ctx context.Context, in AlumnoCreateInput) (Alumn
 		Telefono:         toNullString(in.Telefono),
 		FechaInscripcion: fechaInscripcion,
 		FechaVto:         fechaVto,
-		TipoPlan:         toNullString(in.TipoPlan),
+		TipoPlan:         tipoPlan,
 		RutinaID:         toNullInt32(in.RutinaID),
 	})
 	if err != nil {
@@ -109,10 +114,15 @@ func (s *AlumnoService) Update(ctx context.Context, id int32, in AlumnoUpdateInp
 		return Alumno{}, fmt.Errorf("%w: fecha_vto debe ser YYYY-MM-DD", ErrInvalid)
 	}
 
+	tipoPlan := toNullEnumTipoPlan(in.TipoPlan)
+	if err != nil {
+		return Alumno{}, err
+	}
+
 	err = s.store.UpdateAlumnoDetalles(ctx, db.UpdateAlumnoDetallesParams{
 		UsuarioID: id,
 		FechaVto:  fechaVto,
-		TipoPlan:  toNullString(in.TipoPlan),
+		TipoPlan:  tipoPlan,
 		RutinaID:  toNullInt32(in.RutinaID),
 	})
 	if err != nil {

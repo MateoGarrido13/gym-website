@@ -31,7 +31,12 @@ templ IdentityFields(data PageData) {
 templ PlanFields(data PageData) {
 	<label class="field">
 		<span>Tipo de plan</span>
-		<input type="text" name="tipo_plan" value={ data.FormValues.TipoPlan } placeholder="Ej. Mensual, trimestral"/>
+		<select name="tipo_plan">
+			<option value="" if data.FormValues.TipoPlan == "" { selected }>Seleccionar plan</option>
+			<option value="Mensual" if data.FormValues.TipoPlan == "Mensual" { selected }>Mensual</option>
+			<option value="Trimestral" if data.FormValues.TipoPlan == "Trimestral" { selected }>Trimestral</option>
+			<option value="Anual" if data.FormValues.TipoPlan == "Anual" { selected }>Anual</option>
+		</select>
 	</label>
 	<label class="field">
 		<span>Fecha de vencimiento</span>

@@ -101,12 +101,55 @@ func (ns NullEnumRol) Value() (driver.Value, error) {
 	return string(ns.EnumRol), nil
 }
 
+type EnumTipoPlan string
+
+const (
+	EnumTipoPlanMensual    EnumTipoPlan = "Mensual"
+	EnumTipoPlanTrimestral EnumTipoPlan = "Trimestral"
+	EnumTipoPlanAnual      EnumTipoPlan = "Anual"
+)
+
+func (e *EnumTipoPlan) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EnumTipoPlan(s)
+	case string:
+		*e = EnumTipoPlan(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EnumTipoPlan: %T", src)
+	}
+	return nil
+}
+
+type NullEnumTipoPlan struct {
+	EnumTipoPlan EnumTipoPlan `json:"enum_tipo_plan"`
+	Valid        bool         `json:"valid"` // Valid is true if EnumTipoPlan is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEnumTipoPlan) Scan(value interface{}) error {
+	if value == nil {
+		ns.EnumTipoPlan, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EnumTipoPlan.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEnumTipoPlan) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EnumTipoPlan), nil
+}
+
 type Alumno struct {
-	UsuarioID        int32          `json:"usuario_id"`
-	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
-	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
-	RutinaID         sql.NullInt32  `json:"rutina_id"`
+	UsuarioID        int32            `json:"usuario_id"`
+	FechaInscripcion time.Time        `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime     `json:"fecha_vto"`
+	TipoPlan         NullEnumTipoPlan `json:"tipo_plan"`
+	RutinaID         sql.NullInt32    `json:"rutina_id"`
 }
 
 type Clase struct {

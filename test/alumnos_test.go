@@ -20,7 +20,7 @@ func createAlumnoDePrueba(t *testing.T) db.GetAlumnoCompletoRow {
 		Telefono:         sql.NullString{String: "123456789", Valid: true},
 		FechaInscripcion: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC),
 		FechaVto:         sql.NullTime{Time: time.Date(2026, 10, 10, 0, 0, 0, 0, time.UTC), Valid: true},
-		TipoPlan:         sql.NullString{String: "mensual", Valid: true},
+		TipoPlan:         db.NullEnumTipoPlan{EnumTipoPlan: db.EnumTipoPlanMensual, Valid: true},
 		RutinaID:         sql.NullInt32{Valid: false},
 	}
 
@@ -53,7 +53,7 @@ func TestCreateAlumno(t *testing.T) {
 		Telefono:         sql.NullString{String: "123456789", Valid: true},
 		FechaInscripcion: fechaInscripcion,
 		FechaVto:         sql.NullTime{Time: fechaVto, Valid: true},
-		TipoPlan:         sql.NullString{String: "mensual", Valid: true},
+		TipoPlan:         db.NullEnumTipoPlan{EnumTipoPlan: db.EnumTipoPlanMensual, Valid: true},
 		RutinaID:         sql.NullInt32{Valid: false},
 	}
 
@@ -88,8 +88,8 @@ func TestCreateAlumno(t *testing.T) {
 	if alumno.Email != padre.Email {
 		t.Errorf("email del join = %q, se esperaba %q", alumno.Email, padre.Email)
 	}
-	if alumno.TipoPlan.String != params.TipoPlan.String {
-		t.Errorf("tipo_plan = %q, se esperaba %q", alumno.TipoPlan.String, params.TipoPlan.String)
+	if alumno.TipoPlan.EnumTipoPlan != params.TipoPlan.EnumTipoPlan {
+		t.Errorf("tipo_plan = %q, se esperaba %q", alumno.TipoPlan.EnumTipoPlan, params.TipoPlan.EnumTipoPlan)
 	}
 	if !mismaFecha(alumno.FechaInscripcion, fechaInscripcion) {
 		t.Errorf("fecha_inscripcion = %s, se esperaba %s", alumno.FechaInscripcion.Format("2006-01-02"), fechaInscripcion.Format("2006-01-02"))
@@ -113,8 +113,8 @@ func TestGetAlumno(t *testing.T) {
 	if alumno.Nombre != creado.Nombre || alumno.Apellido != creado.Apellido {
 		t.Errorf("nombre = %q %q, se esperaba %q %q", alumno.Nombre, alumno.Apellido, creado.Nombre, creado.Apellido)
 	}
-	if alumno.TipoPlan.String != creado.TipoPlan.String {
-		t.Errorf("tipo_plan = %q, se esperaba %q", alumno.TipoPlan.String, creado.TipoPlan.String)
+	if alumno.TipoPlan.EnumTipoPlan != creado.TipoPlan.EnumTipoPlan {
+		t.Errorf("tipo_plan = %q, se esperaba %q", alumno.TipoPlan.EnumTipoPlan, creado.TipoPlan.EnumTipoPlan)
 	}
 	if !mismaFecha(alumno.FechaInscripcion, creado.FechaInscripcion) {
 		t.Errorf("fecha_inscripcion = %s, se esperaba %s", alumno.FechaInscripcion.Format("2006-01-02"), creado.FechaInscripcion.Format("2006-01-02"))
@@ -136,7 +136,7 @@ func TestUpdateAlumno(t *testing.T) {
 	updateParams := db.UpdateAlumnoDetallesParams{
 		UsuarioID: creado.ID,
 		FechaVto:  sql.NullTime{Time: nuevaFechaVto, Valid: true},
-		TipoPlan:  sql.NullString{String: "anual", Valid: true},
+		TipoPlan:  db.NullEnumTipoPlan{EnumTipoPlan: db.EnumTipoPlanAnual, Valid: true},
 		RutinaID:  sql.NullInt32{Valid: false},
 	}
 
@@ -149,8 +149,8 @@ func TestUpdateAlumno(t *testing.T) {
 		t.Fatalf("READ después del UPDATE falló: %v", err)
 	}
 
-	if alumno.TipoPlan.String != updateParams.TipoPlan.String {
-		t.Errorf("tipo_plan = %q, se esperaba %q", alumno.TipoPlan.String, updateParams.TipoPlan.String)
+	if alumno.TipoPlan.EnumTipoPlan != updateParams.TipoPlan.EnumTipoPlan {
+		t.Errorf("tipo_plan = %q, se esperaba %q", alumno.TipoPlan.EnumTipoPlan, updateParams.TipoPlan.EnumTipoPlan)
 	}
 	if !alumno.FechaVto.Valid || !mismaFecha(alumno.FechaVto.Time, nuevaFechaVto) {
 		t.Errorf("fecha_vto = %v, se esperaba %s", alumno.FechaVto, nuevaFechaVto.Format("2006-01-02"))
@@ -195,7 +195,7 @@ func createAlumnoConNombre(t *testing.T, nombre, apellido, marca string) db.GetA
 		Telefono:         sql.NullString{String: "123456789", Valid: true},
 		FechaInscripcion: time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC),
 		FechaVto:         sql.NullTime{Time: time.Date(2026, 10, 10, 0, 0, 0, 0, time.UTC), Valid: true},
-		TipoPlan:         sql.NullString{String: "mensual", Valid: true},
+		TipoPlan:         db.NullEnumTipoPlan{EnumTipoPlan: db.EnumTipoPlanMensual, Valid: true},
 		RutinaID:         sql.NullInt32{Valid: false},
 	}
 
@@ -290,8 +290,8 @@ func TestListAlumnos(t *testing.T) {
 			if a.Email != creado.Email {
 				t.Errorf("email = %q, se esperaba %q", a.Email, creado.Email)
 			}
-			if a.TipoPlan.String != creado.TipoPlan.String {
-				t.Errorf("tipo_plan = %q, se esperaba %q", a.TipoPlan.String, creado.TipoPlan.String)
+			if a.TipoPlan.EnumTipoPlan != creado.TipoPlan.EnumTipoPlan {
+				t.Errorf("tipo_plan = %q, se esperaba %q", a.TipoPlan.EnumTipoPlan, creado.TipoPlan.EnumTipoPlan)
 			}
 			break
 		}

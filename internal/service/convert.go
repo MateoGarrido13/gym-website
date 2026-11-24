@@ -3,8 +3,11 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
+
+	db "PRACTICO_DOS/db/sqlc"
 )
 
 var (
@@ -66,6 +69,38 @@ func toNullInt32(v *int32) sql.NullInt32 {
 		return sql.NullInt32{}
 	}
 	return sql.NullInt32{Int32: *v, Valid: true}
+}
+
+// parseTipoPlan valida que el string sea uno de los valores permitidos del enum tipo_plan.
+func ParseTipoPlan(s string) (db.EnumTipoPlan, error) {
+	s = strings.TrimSpace(s)
+	switch s {
+	case "Mensual":
+		return db.EnumTipoPlanMensual, nil
+	case "Trimestral":
+		return db.EnumTipoPlanTrimestral, nil
+	case "Anual":
+		return db.EnumTipoPlanAnual, nil
+	default:
+		return "", fmt.Errorf("tipo_plan invalido: %q (valores permitidos: Mensual, Trimestral, Anual)", s)
+	}
+}
+
+// fromNullEnumTipoPlan convierte un NullEnumTipoPlan de la base de datos a *db.EnumTipoPlan del servicio.
+func fromNullEnumTipoPlan(v db.NullEnumTipoPlan) *db.EnumTipoPlan {
+	if !v.Valid {
+		return nil
+	}
+	t := v.EnumTipoPlan
+	return &t
+}
+
+// toNullEnumTipoPlan convierte un *db.EnumTipoPlan del servicio a NullEnumTipoPlan para la base de datos.
+func toNullEnumTipoPlan(v *db.EnumTipoPlan) db.NullEnumTipoPlan {
+	if v == nil {
+		return db.NullEnumTipoPlan{}
+	}
+	return db.NullEnumTipoPlan{EnumTipoPlan: *v, Valid: true}
 }
 
 func parseDate(s string) (time.Time, error) {

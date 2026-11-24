@@ -303,7 +303,7 @@ Content-Type: application/json
   "nombre": "Ana",
   "apellido": "Lopez",
   "fecha_inscripcion": "2026-10-01",
-  "tipo_plan": "mensual"
+  "tipo_plan": "Mensual"
 }
 HTTP 201
 [Captures]
@@ -313,7 +313,7 @@ jsonpath "$.id" isInteger
 jsonpath "$.email" == "alumno@example.com"
 jsonpath "$.rol" == "alumno"
 jsonpath "$.fecha_inscripcion" == "2026-10-01"
-jsonpath "$.tipo_plan" == "mensual"
+jsonpath "$.tipo_plan" == "Mensual"
 
 # 7.2 Listar alumnos
 GET {{base_url}}/api/alumnos
@@ -335,11 +335,11 @@ PUT {{base_url}}/api/alumnos/{{alumno_id}}
 Content-Type: application/json
 {
   "fecha_vto": "2026-11-01",
-  "tipo_plan": "trimestral"
+  "tipo_plan": "Trimestral"
 }
 HTTP 200
 [Asserts]
-jsonpath "$.tipo_plan" == "trimestral"
+jsonpath "$.tipo_plan" == "Trimestral"
 jsonpath "$.fecha_vto" == "2026-11-01"
 
 

@@ -15,6 +15,7 @@ sql:
       - "./db/migration/000009_create_inscripcion_clase.up.sql"
       - "./db/migration/000010_create_sesion.up.sql"
       - "./db/migration/000011_add_rol_administrador.up.sql"
+      - "./db/migration/000012_add_tipo_plan_enum.up.sql"
       - "./db/migration/funciones.sql"
       - "./db/migration/procedure.sql"
     gen:
@@ -26,4 +27,6 @@ sql:
           - db_type: "enum_rol"
             go_type: "string"
           - db_type: "enum_dia_semana"
+            go_type: "string"
+          - db_type: "enum_tipo_plan"
             go_type: "string"

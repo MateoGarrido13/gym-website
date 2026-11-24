@@ -48,17 +48,17 @@ WHERE u.id = $1
 `
 
 type GetAlumnoCompletoRow struct {
-	ID               int32          `json:"id"`
-	Email            string         `json:"email"`
-	Nombre           string         `json:"nombre"`
-	Apellido         string         `json:"apellido"`
-	Telefono         sql.NullString `json:"telefono"`
-	Rol              string         `json:"rol"`
-	CreatedAt        sql.NullTime   `json:"created_at"`
-	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
-	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
-	RutinaID         sql.NullInt32  `json:"rutina_id"`
+	ID               int32            `json:"id"`
+	Email            string           `json:"email"`
+	Nombre           string           `json:"nombre"`
+	Apellido         string           `json:"apellido"`
+	Telefono         sql.NullString   `json:"telefono"`
+	Rol              string           `json:"rol"`
+	CreatedAt        sql.NullTime     `json:"created_at"`
+	FechaInscripcion time.Time        `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime     `json:"fecha_vto"`
+	TipoPlan         NullEnumTipoPlan `json:"tipo_plan"`
+	RutinaID         sql.NullInt32    `json:"rutina_id"`
 }
 
 func (q *Queries) GetAlumnoCompleto(ctx context.Context, id int32) (GetAlumnoCompletoRow, error) {
@@ -87,11 +87,11 @@ VALUES ($1, $2, $3, $4, $5)
 `
 
 type InsertAlumnoParams struct {
-	UsuarioID        int32          `json:"usuario_id"`
-	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
-	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
-	RutinaID         sql.NullInt32  `json:"rutina_id"`
+	UsuarioID        int32            `json:"usuario_id"`
+	FechaInscripcion time.Time        `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime     `json:"fecha_vto"`
+	TipoPlan         NullEnumTipoPlan `json:"tipo_plan"`
+	RutinaID         sql.NullInt32    `json:"rutina_id"`
 }
 
 // CONSULTAS DE ALUMNO
@@ -116,17 +116,17 @@ ORDER BY u.id
 `
 
 type ListAlumnosCompletosRow struct {
-	ID               int32          `json:"id"`
-	Email            string         `json:"email"`
-	Nombre           string         `json:"nombre"`
-	Apellido         string         `json:"apellido"`
-	Telefono         sql.NullString `json:"telefono"`
-	Rol              string         `json:"rol"`
-	CreatedAt        sql.NullTime   `json:"created_at"`
-	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
-	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
-	RutinaID         sql.NullInt32  `json:"rutina_id"`
+	ID               int32            `json:"id"`
+	Email            string           `json:"email"`
+	Nombre           string           `json:"nombre"`
+	Apellido         string           `json:"apellido"`
+	Telefono         sql.NullString   `json:"telefono"`
+	Rol              string           `json:"rol"`
+	CreatedAt        sql.NullTime     `json:"created_at"`
+	FechaInscripcion time.Time        `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime     `json:"fecha_vto"`
+	TipoPlan         NullEnumTipoPlan `json:"tipo_plan"`
+	RutinaID         sql.NullInt32    `json:"rutina_id"`
 }
 
 func (q *Queries) ListAlumnosCompletos(ctx context.Context) ([]ListAlumnosCompletosRow, error) {
@@ -180,17 +180,17 @@ type ListAlumnosPaginaParams struct {
 }
 
 type ListAlumnosPaginaRow struct {
-	ID               int32          `json:"id"`
-	Email            string         `json:"email"`
-	Nombre           string         `json:"nombre"`
-	Apellido         string         `json:"apellido"`
-	Telefono         sql.NullString `json:"telefono"`
-	Rol              string         `json:"rol"`
-	CreatedAt        sql.NullTime   `json:"created_at"`
-	FechaInscripcion time.Time      `json:"fecha_inscripcion"`
-	FechaVto         sql.NullTime   `json:"fecha_vto"`
-	TipoPlan         sql.NullString `json:"tipo_plan"`
-	RutinaID         sql.NullInt32  `json:"rutina_id"`
+	ID               int32            `json:"id"`
+	Email            string           `json:"email"`
+	Nombre           string           `json:"nombre"`
+	Apellido         string           `json:"apellido"`
+	Telefono         sql.NullString   `json:"telefono"`
+	Rol              string           `json:"rol"`
+	CreatedAt        sql.NullTime     `json:"created_at"`
+	FechaInscripcion time.Time        `json:"fecha_inscripcion"`
+	FechaVto         sql.NullTime     `json:"fecha_vto"`
+	TipoPlan         NullEnumTipoPlan `json:"tipo_plan"`
+	RutinaID         sql.NullInt32    `json:"rutina_id"`
 }
 
 func (q *Queries) ListAlumnosPagina(ctx context.Context, arg ListAlumnosPaginaParams) ([]ListAlumnosPaginaRow, error) {
@@ -235,10 +235,10 @@ WHERE usuario_id = $4
 `
 
 type UpdateAlumnoDetallesParams struct {
-	FechaVto  sql.NullTime   `json:"fecha_vto"`
-	TipoPlan  sql.NullString `json:"tipo_plan"`
-	RutinaID  sql.NullInt32  `json:"rutina_id"`
-	UsuarioID int32          `json:"usuario_id"`
+	FechaVto  sql.NullTime     `json:"fecha_vto"`
+	TipoPlan  NullEnumTipoPlan `json:"tipo_plan"`
+	RutinaID  sql.NullInt32    `json:"rutina_id"`
+	UsuarioID int32            `json:"usuario_id"`
 }
 
 func (q *Queries) UpdateAlumnoDetalles(ctx context.Context, arg UpdateAlumnoDetallesParams) error {

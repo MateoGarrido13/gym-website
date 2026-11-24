@@ -19,12 +19,8 @@ templ EntityForm(data PageData) {
 			{ data.SuccessMessage }
 		</div>
 	}
-	<!-- Solo en alta (no edición): hx-post manda el form sin recargar.
-	     Alumnos responde con HX-Redirect a su página ordenada. El resto,
-	     si el alta es válida, devuelve la página completa y el handler pide
-	     reemplazar el contenido del body, sin cambiar la URL. Si falla, el
-	     target sigue siendo #entity-rows
-	     y el error llega como fragmento hx-swap-oob. -->
+	<!--  hx-post manda el form sin recargar.
+	     Alumnos responde con HX-Redirect a su página ordenada.-->
 	<form class="server-form" method="post" action={ data.Action } if !data.IsEditing { hx-post={ data.Action }
 		hx-target="#entity-rows" hx-swap="beforeend" }>
 		<div class="server-fields">
@@ -43,9 +39,8 @@ templ EntityForm(data PageData) {
 }
 
 // FormError es el mensaje de error del formulario. EntityForm lo llama con
-// oob=false en la carga normal (no se ve si no hay mensaje); el handler de
-// alta lo llama con oob=true para avisar el error sin devolver la página
-// completa, evitando que HTMX la pegue adentro de una fila de la tabla.
+// oob=false en la carga normal (no se ve si no hay mensaje)
+// el handler de alta lo llama con oob=true para avisar el error sin devolver la página completa y evitando que HTMX la pegue adentro de una fila de la tabla.
 templ FormError(message string, oob bool) {
 	<p id="form-error" class="form-error" role="alert" if oob { hx-swap-oob="true" } if message == "" { hidden }>{ message }</p>
 }
