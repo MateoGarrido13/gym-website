@@ -83,8 +83,21 @@ func (h *Handler) createCatalog(w http.ResponseWriter, r *http.Request, kind str
 		h.renderCreateError(w, r, err)
 		return
 	}
-	// HTMX: en el alta, devolvemos solo la fila nueva en vez de redirigir.
-	h.renderNewRow(w, r, kind)
+	// Tras crear exitosamente, renderizar el formulario vacío (valores por defecto)
+	// con un mensaje de éxito, listo para cargar un nuevo registro.
+	// El form sigue apuntando a #entity-rows. En un request HTMX pedimos
+	// reemplazar el contenido del body y quedarnos en la misma URL.
+	// No enviamos HX-Reselect: body: HTMX ya descarta la etiqueta body de una
+	// página completa, y seleccionarla otra vez no matchea nada y deja la página en blanco.
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Retarget", "body")
+		w.Header().Set("HX-Reswap", "innerHTML")
+	}
+	h.showCatalog(w, r, kind, catalogView{
+		Values:         views.FormValues{},
+		SuccessMessage: "Registro creado correctamente",
+		Status:         http.StatusOK,
+	})
 }
 
 // createAlumno redirige a la página donde el nuevo queda según

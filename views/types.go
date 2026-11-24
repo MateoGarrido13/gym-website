@@ -42,6 +42,7 @@ type PageData struct {
 	Description       string
 	Action            string
 	FormError         string
+	SuccessMessage    string // mensaje de éxito tras una operación exitosa (alta, edición, etc.)
 	IsEditing         bool
 	ShowActions       bool
 	FormValues        FormValues

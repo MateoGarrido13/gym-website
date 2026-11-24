@@ -12,11 +12,12 @@ import (
 // catalogView agrupa lo que define cómo se dibuja el formulario y la respuesta.
 // El valor cero significa "formulario de crear en blanco, sin error, status 200".
 type catalogView struct {
-	Values  views.FormValues // texto precargado en los inputs
-	Editing bool             // true si es el formulario de edición
-	ID      int32            // id del registro; solo se usa si Editing
-	Message string           // mensaje de error opcional
-	Status  int              // código HTTP; 0 equivale a 200
+	Values          views.FormValues // texto precargado en los inputs
+	Editing         bool             // true si es el formulario de edición
+	ID              int32            // id del registro; solo se usa si Editing
+	Message         string           // mensaje de error opcional
+	SuccessMessage  string           // mensaje de éxito tras una operación exitosa
+	Status          int              // código HTTP; 0 equivale a 200
 }
 
 func (h *Handler) showCatalog(w http.ResponseWriter, r *http.Request, kind string, view catalogView) {
@@ -46,8 +47,9 @@ func (h *Handler) catalogPage(r *http.Request, kind string, view catalogView) (v
 		Title:       resource.Title(),
 		Headers:     resource.Headers(),
 		Description: resource.Description(),
-		FormError:   view.Message,
-		IsEditing:   view.Editing,
+		FormError:     view.Message,
+		SuccessMessage: view.SuccessMessage,
+		IsEditing:     view.Editing,
 		ShowActions: true,
 		FormValues:  view.Values,
 	}

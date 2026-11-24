@@ -14,9 +14,17 @@ templ EntityForm(data PageData) {
 		</div>
 	</div>
 	@FormError(data.FormError, false)
+	if data.SuccessMessage != "" {
+		<div class="form-success" role="status">
+			{ data.SuccessMessage }
+		</div>
+	}
 	<!-- Solo en alta (no edición): hx-post manda el form sin recargar.
-	     Alumnos responde con HX-Redirect a su página ordenada. El resto
-	     responde con una fila y beforeend la agrega al final del tbody. -->
+	     Alumnos responde con HX-Redirect a su página ordenada. El resto,
+	     si el alta es válida, devuelve la página completa y el handler pide
+	     reemplazar el contenido del body, sin cambiar la URL. Si falla, el
+	     target sigue siendo #entity-rows
+	     y el error llega como fragmento hx-swap-oob. -->
 	<form class="server-form" method="post" action={ data.Action } if !data.IsEditing { hx-post={ data.Action }
 		hx-target="#entity-rows" hx-swap="beforeend" }>
 		<div class="server-fields">

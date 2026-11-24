@@ -75,6 +75,7 @@ button, input, select, textarea { font: inherit; }
 .exercise-option { display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
 .exercise-option input { flex: 0 0 auto; width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--green); }
 .form-error { margin: 0 0 16px; padding: 10px 12px; border: 1px solid #e6c4c1; border-radius: 5px; color: var(--danger); background: #fff6f5; }
+.form-success { margin: 0 0 16px; padding: 10px 12px; border: 1px solid #c5d7be; border-radius: 5px; color: var(--green); background: var(--green-light); }
 .server-form-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
 .button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; padding: 0 14px; border: 1px solid var(--green); border-radius: 5px; color: #fff; background: var(--green); cursor: pointer; text-decoration: none; }
 .button:hover { background: #34582e; }
